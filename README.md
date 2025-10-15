@@ -87,22 +87,118 @@ kubectl get nodes
 - Fully configured k3s cluster
 - Automatic worker node joining
 
+## Kubernetes Infrastructure
+
+The cluster includes production-ready infrastructure components:
+
+### Installed Components
+
+1. **MetalLB** - LoadBalancer implementation for bare metal
+   - IP Pool: `192.168.200.100-192.168.200.110`
+   - Provides stable IPs for LoadBalancer services
+
+2. **Nginx Ingress Controller** - HTTP/HTTPS ingress
+   - LoadBalancer IP: `192.168.200.100`
+   - Handles routing for all applications
+
+3. **cert-manager** - Automated TLS certificate management
+   - Self-signed CA for internal HTTPS
+   - Automatic certificate provisioning for Ingress resources
+
+### DNS Configuration (Pi-hole)
+
+Add this DNS record to your Pi-hole:
+
+```
+*.apps.homelab → 192.168.200.100
+```
+
+This routes all `*.apps.homelab` requests to the Ingress Controller.
+
+### Trust the CA Certificate
+
+To avoid browser warnings, install the CA certificate on your devices:
+
+**macOS:**
+```bash
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain \
+  kubernetes/infrastructure/cert-manager/homelab-ca.crt
+```
+
+See `kubernetes/infrastructure/cert-manager/README.md` for other platforms.
+
+### Deploy Applications with HTTPS
+
+Example application with automatic HTTPS:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app
+  annotations:
+    cert-manager.io/cluster-issuer: homelab-ca-issuer
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - my-app.apps.homelab
+    secretName: my-app-tls
+  rules:
+  - host: my-app.apps.homelab
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: my-app
+            port:
+              number: 80
+```
+
+Access your app at: `https://my-app.apps.homelab`
+
+### Example Application
+
+A whoami demo app is deployed to test the setup:
+
+```bash
+kubectl get pods -l app=whoami
+kubectl get ingress whoami
+```
+
+Test it: `https://whoami.apps.homelab` (after configuring Pi-hole DNS)
+
 ## Project Structure
 
 ```
 proxmox/
 ├── README.md                           # This file
 ├── .gitignore                          # Git ignore rules
-└── terraform/                          # All Terraform code
-    ├── main.tf                         # VM resources
-    ├── providers.tf                    # Provider configuration
-    ├── variables.tf                    # Input variables
-    ├── outputs.tf                      # Output values
-    ├── terraform.tfvars                # Your credentials (not in git)
-    ├── terraform.tfvars.example        # Example configuration
-    └── cloud-init/                     # Cloud-init templates
-        ├── control-plane.yaml.tpl      # Control plane setup
-        └── worker.yaml.tpl             # Worker node setup
+├── terraform/                          # Infrastructure as Code
+│   ├── main.tf                         # VM resources
+│   ├── providers.tf                    # Provider configuration
+│   ├── variables.tf                    # Input variables
+│   ├── outputs.tf                      # Output values
+│   ├── terraform.tfvars                # Your credentials (not in git)
+│   ├── terraform.tfvars.example        # Example configuration
+│   ├── kubeconfig.yaml                 # Cluster access (not in git)
+│   └── cloud-init/                     # Cloud-init templates
+│       ├── control-plane.yaml.tpl      # Control plane setup
+│       └── worker.yaml.tpl             # Worker node setup
+└── kubernetes/                         # Kubernetes manifests
+    ├── infrastructure/                 # Core cluster services
+    │   ├── metallb/                    # LoadBalancer
+    │   ├── ingress-nginx/              # Ingress controller
+    │   └── cert-manager/               # Certificate management
+    │       ├── homelab-ca.crt          # CA certificate (not in git)
+    │       └── *.yaml                  # Configuration files
+    └── apps/                           # Application deployments
+        └── whoami/                     # Example app
+            ├── deployment.yaml
+            ├── service.yaml
+            └── ingress.yaml
 ```
 
 ## Cleanup

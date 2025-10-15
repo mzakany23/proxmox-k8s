@@ -30,6 +30,11 @@ id_ed25519*
 kubeconfig*.yaml
 *.kubeconfig
 
+# Kubernetes secrets and certificates
+**/cloudflare-secret.yaml
+**/homelab-ca.crt
+**/homelab-ca.key
+
 # OS files
 .DS_Store
 Thumbs.db
