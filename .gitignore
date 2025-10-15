@@ -26,6 +26,10 @@ terraform.rc
 id_rsa*
 id_ed25519*
 
+# Kubernetes config
+kubeconfig*.yaml
+*.kubeconfig
+
 # OS files
 .DS_Store
 Thumbs.db
