@@ -1,0 +1,10 @@
+# Copy this file to terraform.tfvars and fill in your values
+
+proxmox_api_url          = "https://192.168.200.2:8006/api2/json"
+proxmox_api_token_id     = "root@pam!terraform"
+proxmox_api_token_secret = "your-secret-here"
+
+# Optional overrides
+# proxmox_node         = "pve"
+# ssh_public_key_file  = "~/.ssh/id_rsa.pub"
+# network_gateway      = "192.168.200.1"
