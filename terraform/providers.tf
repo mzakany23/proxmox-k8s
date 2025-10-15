@@ -15,6 +15,7 @@ provider "proxmox" {
   insecure  = true # Set to false if using valid SSL certificates
 
   ssh {
-    agent = true
+    agent    = true
+    username = "root"
   }
 }

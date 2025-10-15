@@ -167,9 +167,3 @@ resource "proxmox_virtual_environment_file" "worker_cloud_init" {
 
   depends_on = [proxmox_virtual_environment_vm.control_plane]
 }
-
-# Random password generator
-resource "random_password" "k3s_token" {
-  length  = 32
-  special = false
-}
