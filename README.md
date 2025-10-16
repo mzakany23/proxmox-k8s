@@ -4,25 +4,37 @@ Automated 3-node Kubernetes cluster deployment on Proxmox using Terraform and k3
 
 ## 🚀 Quick Start: Deploy a New App
 
+**This repo is for infrastructure and templates.** Each application should have its own private Git repository for proper GitOps workflow.
+
+### Deploy New App in Separate Repo (Recommended)
+
 ```bash
-# 1. Create app from template
-./scripts/create-app.sh my-app nginx:alpine
+# One command creates repo, deploys app, and configures DNS!
+./scripts/deploy-app-gitea.sh my-api
 
-# 2. Customize manifests (optional)
-code kubernetes/apps/my-app/
-
-# 3. Deploy via GitOps
-git add . && git commit -m "Add my-app" && git push
-kubectl apply -f kubernetes/infrastructure/argocd/app-my-app.yaml
-
-# 4. Add DNS
-./scripts/add-dns.sh my-app
-
-# 5. Access your app with HTTPS!
-open https://my-app.apps.homelab
+# Wait ~30 seconds for ArgoCD to sync
+open https://my-api.apps.homelab
 ```
 
-**See [`templates/README.md`](templates/README.md) for detailed documentation on deploying apps, GitOps workflows, and self-hosted Git with Gitea.**
+This creates:
+- ✅ Private repository in Gitea: `https://gitea.apps.homelab/homelab/my-api`
+- ✅ Kubernetes manifests from template (deployment, service, ingress)
+- ✅ ArgoCD Application with auto-sync
+- ✅ DNS entry in Pi-hole
+- ✅ Automatic HTTPS with valid certificate
+
+**See [`scripts/README.md`](scripts/README.md) for complete automation guide.**
+
+### Alternative: Deploy App in This Repo (Not Recommended for Production)
+
+For testing or legacy workflows, you can deploy apps in this repo:
+
+```bash
+./scripts/create-app.sh my-app nginx:alpine
+# ... customize, commit, apply ArgoCD app, add DNS
+```
+
+**Note:** The example apps (`whoami`, `hello-world`) in `kubernetes/apps/` are for demonstration only. In production, move each app to its own Gitea repository.
 
 ## Architecture
 
@@ -195,20 +207,26 @@ Test it: `https://whoami.apps.homelab` (after configuring Pi-hole DNS)
 ## Project Structure
 
 ```
-proxmox/
+proxmox/                                # ⚙️ Infrastructure & Templates Repo
 ├── README.md                           # This file
 ├── SETUP_COMPLETE.md                   # Setup guide
 ├── .gitignore                          # Git ignore rules
-├── scripts/                            # Helper scripts
-│   ├── create-app.sh                   # Create new app from template
+├── scripts/                            # 🚀 Automation scripts
+│   ├── README.md                       # ⭐ Complete automation guide
+│   ├── deploy-app-gitea.sh             # One-command app deployment
+│   ├── gitea-create-repo.sh            # Create Gitea repository
+│   ├── gitea-setup-repo.sh             # Initialize repo with template
+│   ├── gitea-add-to-argocd.sh          # Connect Gitea to ArgoCD
+│   ├── create-argocd-app.sh            # Create ArgoCD Application
+│   ├── create-app.sh                   # Legacy: Create app in this repo
 │   └── add-dns.sh                      # Add DNS entry to Pi-hole
-├── templates/                          # Application templates
-│   ├── README.md                       # ⭐ Deployment & GitOps guide
+├── templates/                          # 📦 Application templates
+│   ├── README.md                       # Deployment & GitOps guide
 │   ├── basic-app/                      # Stateless app template
 │   ├── stateful-app/                   # StatefulSet template
 │   ├── multi-container/                # Multi-container pod template
 │   └── argocd-apps/                    # ArgoCD Application template
-├── terraform/                          # Infrastructure as Code
+├── terraform/                          # 🏗️ Infrastructure as Code
 │   ├── main.tf                         # VM resources
 │   ├── providers.tf                    # Provider configuration
 │   ├── variables.tf                    # Input variables
@@ -219,7 +237,7 @@ proxmox/
 │   └── cloud-init/                     # Cloud-init templates
 │       ├── control-plane.yaml.tpl      # Control plane setup
 │       └── worker.yaml.tpl             # Worker node setup
-└── kubernetes/                         # Kubernetes manifests
+└── kubernetes/                         # ☸️ Kubernetes manifests
     ├── infrastructure/                 # Core cluster services
     │   ├── metallb/                    # LoadBalancer
     │   ├── ingress-nginx/              # Ingress controller
@@ -231,12 +249,14 @@ proxmox/
     │       ├── ingress.yaml            # ArgoCD web UI
     │       ├── app-*.yaml              # Application definitions
     │       └── *.yaml                  # Configuration files
-    └── apps/                           # Application deployments
+    └── apps/                           # ⚠️ Example apps (move to Gitea)
         ├── whoami/                     # Example: Request inspector
         ├── hello-world/                # Example: Custom HTML page
-        └── gitea/                      # Optional: Self-hosted Git
+        └── gitea/                      # Infrastructure: Self-hosted Git
             └── README.md               # Gitea setup guide
 ```
+
+**Recommended:** Keep only infrastructure in this repo. Applications should live in separate Gitea repositories (`https://gitea.apps.homelab/homelab/<app-name>`).
 
 ## Cleanup
 
@@ -255,10 +275,11 @@ See `terraform/variables.tf` for customizable options:
 
 ## 📚 Documentation
 
-- **[Templates & Deployment Guide](templates/README.md)** - How to deploy apps, GitOps workflows, self-hosted Git
+- **[Automation Scripts Guide](scripts/README.md)** - ⭐ Complete automation guide for deploying apps
+- **[Templates & Deployment Guide](templates/README.md)** - Application templates and GitOps workflows
+- **[Gitea Setup](kubernetes/apps/gitea/README.md)** - Self-hosted Git service (required for private repos)
 - **[ArgoCD Guide](kubernetes/infrastructure/argocd/README.md)** - GitOps configuration and usage
 - **[cert-manager Guide](kubernetes/infrastructure/cert-manager/README.md)** - Certificate management
-- **[Gitea Setup](kubernetes/apps/gitea/README.md)** - Self-hosted Git service (optional)
 - **[Setup Complete](SETUP_COMPLETE.md)** - Post-installation guide
 
 ## 🎯 Features
@@ -270,5 +291,23 @@ See `terraform/variables.tf` for customizable options:
 - ✅ **GitOps** - ArgoCD watches git repos and auto-deploys
 - ✅ **DNS Integration** - Pi-hole provides internal DNS resolution
 - ✅ **Templates** - Pre-built templates for rapid app deployment
-- ✅ **Self-Hosted Git** - Optional Gitea for complete independence
-- ✅ **Helper Scripts** - One-command app creation and DNS management
+- ✅ **Private Git Repos** - Gitea for completely private GitOps workflow
+- ✅ **One-Command Deployment** - Create repo, deploy app, configure DNS automatically
+
+## 🔄 Workflow
+
+**Infrastructure Setup (One-Time):**
+1. Deploy cluster with Terraform (`terraform apply`)
+2. Install Gitea (`kubectl apply -f kubernetes/apps/gitea/`)
+3. Connect Gitea to ArgoCD (`./scripts/gitea-add-to-argocd.sh`)
+
+**Deploy New Application:**
+1. Run `./scripts/deploy-app-gitea.sh my-app`
+2. Wait 30 seconds for ArgoCD to sync
+3. Access at `https://my-app.apps.homelab`
+
+**Update Application:**
+1. Clone your app repo: `git clone https://gitea.apps.homelab/homelab/my-app.git`
+2. Make changes to manifests
+3. `git commit && git push`
+4. ArgoCD auto-syncs within seconds
