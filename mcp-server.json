@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "proxmox-k8s-homelab": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/michaelzakany/projects/proxmox"
+      ],
+      "metadata": {
+        "name": "Proxmox K8s Homelab",
+        "description": "Documentation and templates for Proxmox Kubernetes homelab with GitOps, automatic HTTPS, and self-hosted Git",
+        "version": "1.0.0"
+      }
+    }
+  }
+}
