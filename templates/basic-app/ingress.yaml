@@ -1,0 +1,37 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: REPLACE_APP_NAME
+  namespace: default
+  annotations:
+    # This annotation enables automatic HTTPS certificate provisioning
+    cert-manager.io/cluster-issuer: homelab-ca-issuer
+
+    # Optional: Enable CORS
+    # nginx.ingress.kubernetes.io/enable-cors: "true"
+    # nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+
+    # Optional: Add basic auth
+    # nginx.ingress.kubernetes.io/auth-type: basic
+    # nginx.ingress.kubernetes.io/auth-secret: basic-auth
+    # nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
+
+    # Optional: Rate limiting
+    # nginx.ingress.kubernetes.io/limit-rps: "10"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - REPLACE_APP_NAME.apps.homelab
+    secretName: REPLACE_APP_NAME-tls  # cert-manager creates this automatically
+  rules:
+  - host: REPLACE_APP_NAME.apps.homelab
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: REPLACE_APP_NAME
+            port:
+              number: 80

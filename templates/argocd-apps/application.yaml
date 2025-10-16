@@ -1,0 +1,73 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: REPLACE_APP_NAME
+  namespace: argocd
+  # Optional: Add finalizers for cleanup
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # Project the application belongs to (default is fine for most cases)
+  project: default
+
+  # Source repository configuration
+  source:
+    # Git repository URL - can be HTTP or SSH
+    repoURL: REPLACE_REPO_URL  # e.g., https://github.com/user/repo.git or git@github.com:user/repo.git
+
+    # Branch, tag, or commit SHA
+    targetRevision: main  # or master, v1.0.0, abc123, etc.
+
+    # Path to the Kubernetes manifests in the repo
+    path: REPLACE_PATH  # e.g., k8s/, manifests/, kubernetes/apps/my-app
+
+    # Optional: Use Helm
+    # helm:
+    #   valueFiles:
+    #     - values.yaml
+    #   parameters:
+    #     - name: image.tag
+    #       value: v1.0.0
+
+    # Optional: Use Kustomize
+    # kustomize:
+    #   namePrefix: prod-
+    #   nameSuffix: -v1
+
+  # Destination cluster and namespace
+  destination:
+    # Kubernetes API server URL (use this for in-cluster)
+    server: https://kubernetes.default.svc
+
+    # Target namespace
+    namespace: default
+
+  # Sync policy configuration
+  syncPolicy:
+    # Automated sync (remove this section for manual sync)
+    automated:
+      # Automatically sync when repo changes
+      prune: true  # Delete resources that are no longer in git
+      selfHeal: true  # Force sync if someone manually changes resources
+      allowEmpty: false  # Don't sync if the path is empty
+
+    # Sync options
+    syncOptions:
+      - CreateNamespace=true  # Automatically create namespace if it doesn't exist
+      # - PrunePropagationPolicy=foreground  # Wait for resources to be deleted
+      # - PruneLast=true  # Delete resources after new ones are created
+
+    # Optional: Retry configuration
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # Optional: Ignore differences in certain fields
+  # ignoreDifferences:
+  #   - group: apps
+  #     kind: Deployment
+  #     jsonPointers:
+  #       - /spec/replicas

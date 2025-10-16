@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: REPLACE_APP_NAME
+  namespace: default
+  labels:
+    app: REPLACE_APP_NAME
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: REPLACE_APP_NAME
+  template:
+    metadata:
+      labels:
+        app: REPLACE_APP_NAME
+    spec:
+      containers:
+      - name: REPLACE_APP_NAME
+        image: REPLACE_IMAGE  # e.g., nginx:alpine, your-registry/your-app:v1.0
+        ports:
+        - containerPort: 80
+          name: http
+        env:
+        - name: EXAMPLE_ENV
+          value: "production"
+        # Uncomment for health checks
+        # livenessProbe:
+        #   httpGet:
+        #     path: /health
+        #     port: http
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 10
+        # readinessProbe:
+        #   httpGet:
+        #     path: /ready
+        #     port: http
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 5
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"

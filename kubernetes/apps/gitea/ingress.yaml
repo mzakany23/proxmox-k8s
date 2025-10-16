@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gitea
+  namespace: gitea
+  annotations:
+    cert-manager.io/cluster-issuer: homelab-ca-issuer
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"  # Allow large git pushes
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - gitea.apps.homelab
+    secretName: gitea-tls
+  rules:
+  - host: gitea.apps.homelab
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: gitea-http
+            port:
+              number: 3000

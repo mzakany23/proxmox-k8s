@@ -1,6 +1,28 @@
 # Proxmox Kubernetes Cluster with Terraform
 
-Automated 3-node Kubernetes cluster deployment on Proxmox using Terraform and k3s.
+Automated 3-node Kubernetes cluster deployment on Proxmox using Terraform and k3s with automatic HTTPS and GitOps.
+
+## 🚀 Quick Start: Deploy a New App
+
+```bash
+# 1. Create app from template
+./scripts/create-app.sh my-app nginx:alpine
+
+# 2. Customize manifests (optional)
+code kubernetes/apps/my-app/
+
+# 3. Deploy via GitOps
+git add . && git commit -m "Add my-app" && git push
+kubectl apply -f kubernetes/infrastructure/argocd/app-my-app.yaml
+
+# 4. Add DNS
+./scripts/add-dns.sh my-app
+
+# 5. Access your app with HTTPS!
+open https://my-app.apps.homelab
+```
+
+**See [`templates/README.md`](templates/README.md) for detailed documentation on deploying apps, GitOps workflows, and self-hosted Git with Gitea.**
 
 ## Architecture
 
@@ -175,7 +197,17 @@ Test it: `https://whoami.apps.homelab` (after configuring Pi-hole DNS)
 ```
 proxmox/
 ├── README.md                           # This file
+├── SETUP_COMPLETE.md                   # Setup guide
 ├── .gitignore                          # Git ignore rules
+├── scripts/                            # Helper scripts
+│   ├── create-app.sh                   # Create new app from template
+│   └── add-dns.sh                      # Add DNS entry to Pi-hole
+├── templates/                          # Application templates
+│   ├── README.md                       # ⭐ Deployment & GitOps guide
+│   ├── basic-app/                      # Stateless app template
+│   ├── stateful-app/                   # StatefulSet template
+│   ├── multi-container/                # Multi-container pod template
+│   └── argocd-apps/                    # ArgoCD Application template
 ├── terraform/                          # Infrastructure as Code
 │   ├── main.tf                         # VM resources
 │   ├── providers.tf                    # Provider configuration
@@ -191,14 +223,19 @@ proxmox/
     ├── infrastructure/                 # Core cluster services
     │   ├── metallb/                    # LoadBalancer
     │   ├── ingress-nginx/              # Ingress controller
-    │   └── cert-manager/               # Certificate management
-    │       ├── homelab-ca.crt          # CA certificate (not in git)
+    │   ├── cert-manager/               # Certificate management
+    │   │   ├── homelab-ca.crt          # CA certificate (not in git)
+    │   │   └── *.yaml                  # Configuration files
+    │   └── argocd/                     # GitOps deployment
+    │       ├── README.md               # ArgoCD guide
+    │       ├── ingress.yaml            # ArgoCD web UI
+    │       ├── app-*.yaml              # Application definitions
     │       └── *.yaml                  # Configuration files
     └── apps/                           # Application deployments
-        └── whoami/                     # Example app
-            ├── deployment.yaml
-            ├── service.yaml
-            └── ingress.yaml
+        ├── whoami/                     # Example: Request inspector
+        ├── hello-world/                # Example: Custom HTML page
+        └── gitea/                      # Optional: Self-hosted Git
+            └── README.md               # Gitea setup guide
 ```
 
 ## Cleanup
@@ -215,3 +252,23 @@ See `terraform/variables.tf` for customizable options:
 - Network configuration
 - Node names
 - Kubernetes version (via k3s channel)
+
+## 📚 Documentation
+
+- **[Templates & Deployment Guide](templates/README.md)** - How to deploy apps, GitOps workflows, self-hosted Git
+- **[ArgoCD Guide](kubernetes/infrastructure/argocd/README.md)** - GitOps configuration and usage
+- **[cert-manager Guide](kubernetes/infrastructure/cert-manager/README.md)** - Certificate management
+- **[Gitea Setup](kubernetes/apps/gitea/README.md)** - Self-hosted Git service (optional)
+- **[Setup Complete](SETUP_COMPLETE.md)** - Post-installation guide
+
+## 🎯 Features
+
+- ✅ **Automated Infrastructure** - Terraform provisions 3-node k3s cluster
+- ✅ **Automatic HTTPS** - cert-manager with self-signed CA
+- ✅ **LoadBalancer** - MetalLB provides stable IPs (192.168.200.100-110)
+- ✅ **Ingress Controller** - Nginx routes traffic with TLS termination
+- ✅ **GitOps** - ArgoCD watches git repos and auto-deploys
+- ✅ **DNS Integration** - Pi-hole provides internal DNS resolution
+- ✅ **Templates** - Pre-built templates for rapid app deployment
+- ✅ **Self-Hosted Git** - Optional Gitea for complete independence
+- ✅ **Helper Scripts** - One-command app creation and DNS management
