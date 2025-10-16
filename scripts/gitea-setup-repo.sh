@@ -18,8 +18,11 @@ fi
 REPO_NAME=$1
 TEMPLATE=$2
 USERNAME="homelab"
+PASSWORD="homelab123"
 GITEA_URL="https://gitea.apps.homelab"
 WORK_DIR="/tmp/gitea-$REPO_NAME-$$"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Create the repo in Gitea
 echo "1. Creating repository in Gitea..."
@@ -39,7 +42,7 @@ git config user.email "homelab@local"
 # Add content based on template
 if [ "$TEMPLATE" = "basic-app" ]; then
     echo "Copying basic-app template..."
-    cp -r $(dirname $0)/../templates/basic-app/* .
+    cp -r "$PROJECT_ROOT/templates/basic-app/"* .
 
     # Replace placeholders
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -90,9 +93,8 @@ git commit -m "Initial commit from template: $TEMPLATE"
 
 echo ""
 echo "3. Pushing to Gitea..."
-echo "   Enter username: homelab"
-echo "   Enter password: homelab123"
-git remote add origin $GITEA_URL/$USERNAME/$REPO_NAME.git
+echo "   Using credentials: homelab"
+git remote add origin https://$USERNAME:$PASSWORD@gitea.apps.homelab/$USERNAME/$REPO_NAME.git
 git push -u origin main
 
 # Cleanup

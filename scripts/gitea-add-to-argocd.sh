@@ -43,7 +43,8 @@ echo ""
 echo "Adding Gitea repository credentials..."
 argocd repocreds add $GITEA_URL \
   --username $USERNAME \
-  --password $PASSWORD
+  --password $PASSWORD \
+  --insecure
 
 echo ""
 echo "✅ Gitea repository credentials added to ArgoCD!"
