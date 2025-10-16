@@ -200,7 +200,6 @@ proxmox/                                # Infrastructure & Templates Repo
 ├── README.md                           # This file
 ├── MCP_SETUP.md                        # MCP server setup for AI assistants
 ├── mcp-server.json                     # MCP configuration file
-├── SETUP_COMPLETE.md                   # Setup guide
 ├── .gitignore                          # Git ignore rules
 ├── scripts/                            # Automation scripts
 │   ├── README.md                       # Complete automation guide
@@ -270,7 +269,6 @@ See `terraform/variables.tf` for customizable options:
 - **[Gitea Setup](kubernetes/apps/gitea/README.md)** - Self-hosted Git service (required for private repos)
 - **[ArgoCD Guide](kubernetes/infrastructure/argocd/README.md)** - GitOps configuration and usage
 - **[cert-manager Guide](kubernetes/infrastructure/cert-manager/README.md)** - Certificate management
-- **[Setup Complete](SETUP_COMPLETE.md)** - Post-installation guide
 
 ## Features
 
