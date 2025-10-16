@@ -34,7 +34,7 @@ For testing or legacy workflows, you can deploy apps in this repo:
 # ... customize, commit, apply ArgoCD app, add DNS
 ```
 
-**Note:** The example apps (`whoami`, `hello-world`) in `kubernetes/apps/` are for demonstration only. In production, move each app to its own Gitea repository.
+**Production Best Practice:** Each application should have its own Git repository in Gitea for proper GitOps workflow and separation of concerns.
 
 ## Architecture
 
@@ -193,22 +193,13 @@ spec:
 
 Access your app at: `https://my-app.apps.homelab`
 
-### Example Application
-
-A whoami demo app is deployed to test the setup:
-
-```bash
-kubectl get pods -l app=whoami
-kubectl get ingress whoami
-```
-
-Test it: `https://whoami.apps.homelab` (after configuring Pi-hole DNS)
-
 ## Project Structure
 
 ```
 proxmox/                                # ⚙️ Infrastructure & Templates Repo
 ├── README.md                           # This file
+├── MCP_SETUP.md                        # 🤖 MCP server setup for AI assistants
+├── mcp-server.json                     # MCP configuration file
 ├── SETUP_COMPLETE.md                   # Setup guide
 ├── .gitignore                          # Git ignore rules
 ├── scripts/                            # 🚀 Automation scripts
@@ -249,10 +240,8 @@ proxmox/                                # ⚙️ Infrastructure & Templates Repo
     │       ├── ingress.yaml            # ArgoCD web UI
     │       ├── app-*.yaml              # Application definitions
     │       └── *.yaml                  # Configuration files
-    └── apps/                           # ⚠️ Example apps (move to Gitea)
-        ├── whoami/                     # Example: Request inspector
-        ├── hello-world/                # Example: Custom HTML page
-        └── gitea/                      # Infrastructure: Self-hosted Git
+    └── apps/                           # Infrastructure apps only
+        └── gitea/                      # Self-hosted Git service
             └── README.md               # Gitea setup guide
 ```
 
@@ -276,6 +265,7 @@ See `terraform/variables.tf` for customizable options:
 ## 📚 Documentation
 
 - **[Automation Scripts Guide](scripts/README.md)** - ⭐ Complete automation guide for deploying apps
+- **[MCP Server Setup](MCP_SETUP.md)** - 🤖 Use this repo as AI assistant context (Claude Desktop)
 - **[Templates & Deployment Guide](templates/README.md)** - Application templates and GitOps workflows
 - **[Gitea Setup](kubernetes/apps/gitea/README.md)** - Self-hosted Git service (required for private repos)
 - **[ArgoCD Guide](kubernetes/infrastructure/argocd/README.md)** - GitOps configuration and usage
@@ -293,6 +283,7 @@ See `terraform/variables.tf` for customizable options:
 - ✅ **Templates** - Pre-built templates for rapid app deployment
 - ✅ **Private Git Repos** - Gitea for completely private GitOps workflow
 - ✅ **One-Command Deployment** - Create repo, deploy app, configure DNS automatically
+- ✅ **MCP Server Support** - Use as context for AI assistants (Claude Desktop)
 
 ## 🔄 Workflow
 
