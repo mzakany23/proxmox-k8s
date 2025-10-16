@@ -38,19 +38,18 @@ argocd login argocd.apps.homelab \
   --password $ARGOCD_PASSWORD \
   --insecure
 
-# Add repository
+# Add repository credentials
 echo ""
-echo "Adding Gitea repository..."
-argocd repo add $GITEA_URL \
+echo "Adding Gitea repository credentials..."
+argocd repocreds add $GITEA_URL \
   --username $USERNAME \
-  --password $PASSWORD \
-  --insecure-skip-server-verification
+  --password $PASSWORD
 
 echo ""
-echo "✅ Gitea repository added to ArgoCD!"
+echo "✅ Gitea repository credentials added to ArgoCD!"
 echo ""
 echo "All repos from $GITEA_URL/$USERNAME/ can now be used in ArgoCD Applications."
 echo ""
-echo "List repositories:"
-echo "  argocd repo list"
+echo "List repository credentials:"
+echo "  argocd repocreds list"
 echo ""
