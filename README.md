@@ -2,7 +2,7 @@
 
 Automated 3-node Kubernetes cluster deployment on Proxmox using Terraform and k3s with automatic HTTPS and GitOps.
 
-## 🚀 Quick Start: Deploy a New App
+## Quick Start: Deploy a New App
 
 **This repo is for infrastructure and templates.** Each application should have its own private Git repository for proper GitOps workflow.
 
@@ -17,11 +17,11 @@ open https://my-api.apps.homelab
 ```
 
 This creates:
-- ✅ Private repository in Gitea: `https://gitea.apps.homelab/homelab/my-api`
-- ✅ Kubernetes manifests from template (deployment, service, ingress)
-- ✅ ArgoCD Application with auto-sync
-- ✅ DNS entry in Pi-hole
-- ✅ Automatic HTTPS with valid certificate
+- Private repository in Gitea: `https://gitea.apps.homelab/homelab/my-api`
+- Kubernetes manifests from template (deployment, service, ingress)
+- ArgoCD Application with auto-sync
+- DNS entry in Pi-hole
+- Automatic HTTPS with valid certificate
 
 **See [`scripts/README.md`](scripts/README.md) for complete automation guide.**
 
@@ -196,14 +196,14 @@ Access your app at: `https://my-app.apps.homelab`
 ## Project Structure
 
 ```
-proxmox/                                # ⚙️ Infrastructure & Templates Repo
+proxmox/                                # Infrastructure & Templates Repo
 ├── README.md                           # This file
-├── MCP_SETUP.md                        # 🤖 MCP server setup for AI assistants
+├── MCP_SETUP.md                        # MCP server setup for AI assistants
 ├── mcp-server.json                     # MCP configuration file
 ├── SETUP_COMPLETE.md                   # Setup guide
 ├── .gitignore                          # Git ignore rules
-├── scripts/                            # 🚀 Automation scripts
-│   ├── README.md                       # ⭐ Complete automation guide
+├── scripts/                            # Automation scripts
+│   ├── README.md                       # Complete automation guide
 │   ├── deploy-app-gitea.sh             # One-command app deployment
 │   ├── gitea-create-repo.sh            # Create Gitea repository
 │   ├── gitea-setup-repo.sh             # Initialize repo with template
@@ -211,13 +211,13 @@ proxmox/                                # ⚙️ Infrastructure & Templates Repo
 │   ├── create-argocd-app.sh            # Create ArgoCD Application
 │   ├── create-app.sh                   # Legacy: Create app in this repo
 │   └── add-dns.sh                      # Add DNS entry to Pi-hole
-├── templates/                          # 📦 Application templates
+├── templates/                          # Application templates
 │   ├── README.md                       # Deployment & GitOps guide
 │   ├── basic-app/                      # Stateless app template
 │   ├── stateful-app/                   # StatefulSet template
 │   ├── multi-container/                # Multi-container pod template
 │   └── argocd-apps/                    # ArgoCD Application template
-├── terraform/                          # 🏗️ Infrastructure as Code
+├── terraform/                          # Infrastructure as Code
 │   ├── main.tf                         # VM resources
 │   ├── providers.tf                    # Provider configuration
 │   ├── variables.tf                    # Input variables
@@ -228,7 +228,7 @@ proxmox/                                # ⚙️ Infrastructure & Templates Repo
 │   └── cloud-init/                     # Cloud-init templates
 │       ├── control-plane.yaml.tpl      # Control plane setup
 │       └── worker.yaml.tpl             # Worker node setup
-└── kubernetes/                         # ☸️ Kubernetes manifests
+└── kubernetes/                         # Kubernetes manifests
     ├── infrastructure/                 # Core cluster services
     │   ├── metallb/                    # LoadBalancer
     │   ├── ingress-nginx/              # Ingress controller
@@ -262,30 +262,30 @@ See `terraform/variables.tf` for customizable options:
 - Node names
 - Kubernetes version (via k3s channel)
 
-## 📚 Documentation
+## Documentation
 
-- **[Automation Scripts Guide](scripts/README.md)** - ⭐ Complete automation guide for deploying apps
-- **[MCP Server Setup](MCP_SETUP.md)** - 🤖 Use this repo as AI assistant context (Claude Desktop)
+- **[Automation Scripts Guide](scripts/README.md)** - Complete automation guide for deploying apps
+- **[MCP Server Setup](MCP_SETUP.md)** - Use this repo as AI assistant context (Claude Desktop)
 - **[Templates & Deployment Guide](templates/README.md)** - Application templates and GitOps workflows
 - **[Gitea Setup](kubernetes/apps/gitea/README.md)** - Self-hosted Git service (required for private repos)
 - **[ArgoCD Guide](kubernetes/infrastructure/argocd/README.md)** - GitOps configuration and usage
 - **[cert-manager Guide](kubernetes/infrastructure/cert-manager/README.md)** - Certificate management
 - **[Setup Complete](SETUP_COMPLETE.md)** - Post-installation guide
 
-## 🎯 Features
+## Features
 
-- ✅ **Automated Infrastructure** - Terraform provisions 3-node k3s cluster
-- ✅ **Automatic HTTPS** - cert-manager with self-signed CA
-- ✅ **LoadBalancer** - MetalLB provides stable IPs (192.168.200.100-110)
-- ✅ **Ingress Controller** - Nginx routes traffic with TLS termination
-- ✅ **GitOps** - ArgoCD watches git repos and auto-deploys
-- ✅ **DNS Integration** - Pi-hole provides internal DNS resolution
-- ✅ **Templates** - Pre-built templates for rapid app deployment
-- ✅ **Private Git Repos** - Gitea for completely private GitOps workflow
-- ✅ **One-Command Deployment** - Create repo, deploy app, configure DNS automatically
-- ✅ **MCP Server Support** - Use as context for AI assistants (Claude Desktop)
+- **Automated Infrastructure** - Terraform provisions 3-node k3s cluster
+- **Automatic HTTPS** - cert-manager with self-signed CA
+- **LoadBalancer** - MetalLB provides stable IPs (192.168.200.100-110)
+- **Ingress Controller** - Nginx routes traffic with TLS termination
+- **GitOps** - ArgoCD watches git repos and auto-deploys
+- **DNS Integration** - Pi-hole provides internal DNS resolution
+- **Templates** - Pre-built templates for rapid app deployment
+- **Private Git Repos** - Gitea for completely private GitOps workflow
+- **One-Command Deployment** - Create repo, deploy app, configure DNS automatically
+- **MCP Server Support** - Use as context for AI assistants (Claude Desktop)
 
-## 🔄 Workflow
+## Workflow
 
 **Infrastructure Setup (One-Time):**
 1. Deploy cluster with Terraform (`terraform apply`)
