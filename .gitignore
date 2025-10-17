@@ -52,3 +52,6 @@ conversation.env
 
 # Claude Code documentation (contains sensitive workflow info)
 CLAUDE.md
+
+# Conversation logs
+conversation/
