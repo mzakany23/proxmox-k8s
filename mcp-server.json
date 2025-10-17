@@ -9,7 +9,7 @@
       ],
       "metadata": {
         "name": "Proxmox K8s Homelab",
-        "description": "Documentation and templates for Proxmox Kubernetes homelab with GitOps, automatic HTTPS, and self-hosted Git",
+        "description": "3-node Kubernetes cluster on Proxmox with k3s, ArgoCD GitOps, Let's Encrypt HTTPS via Cloudflare DNS-01, Gitea for private repos, and automated app deployment scripts. Deploy apps with: ./scripts/deploy-app.sh <name> frontend <image>",
         "version": "1.0.0"
       }
     }
