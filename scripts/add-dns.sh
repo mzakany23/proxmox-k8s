@@ -12,7 +12,7 @@ fi
 
 APP_NAME=$1
 PIHOLE_HOST="pi"
-INGRESS_IP="192.168.200.100"
+INGRESS_IP="192.168.68.100"
 
 echo "Adding DNS entry for $APP_NAME.apps.homelab..."
 

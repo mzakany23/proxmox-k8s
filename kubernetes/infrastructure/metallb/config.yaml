@@ -8,7 +8,7 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-  - 192.168.200.100-192.168.200.110  # 10 IPs available for LoadBalancer services
+  - 192.168.68.100-192.168.68.110  # 10 IPs available for LoadBalancer services
 ---
 # L2 Advertisement
 # Announces the LoadBalancer IPs on the local network using Layer 2 (ARP)
