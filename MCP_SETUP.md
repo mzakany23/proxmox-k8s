@@ -9,6 +9,10 @@ When configured as an MCP server, AI assistants can:
 - Access templates and example configurations
 - Help you with infrastructure setup and troubleshooting
 - Reference your specific setup when answering questions
+- Guide you through app deployments using the deployment scripts
+- Help troubleshoot ArgoCD GitOps workflows
+- Explain Let's Encrypt certificate configuration
+- Provide kubectl commands for your specific cluster setup
 
 ## Quick Setup for Claude Desktop
 
@@ -85,13 +89,26 @@ Claude should be able to see and reference:
 
 Once configured, you can ask Claude:
 
-- "How do I deploy a new app using the Gitea workflow?"
-- "What's the command to add DNS entries?"
-- "Show me the ingress configuration for automatic HTTPS"
+- "How do I deploy a new app with HTTPS to my Proxmox cluster?"
+- "Show me how to use the deploy-app.sh script"
+- "What's my cluster architecture and network setup?"
 - "How do I troubleshoot ArgoCD sync issues?"
-- "What templates are available?"
+- "Walk me through pushing infrastructure changes to Gitea"
+- "What templates are available for frontend vs backend apps?"
+- "How is Let's Encrypt configured with Cloudflare DNS-01?"
+- "Show me the GitOps workflow from code change to deployment"
 
 Claude will reference your actual setup and documentation when answering.
+
+## Key Information Available to AI
+
+The MCP server provides access to:
+- **Deployment Scripts**: `./scripts/deploy-app.sh` for app deployments
+- **Templates**: Frontend (with HTTPS ingress) and backend (internal) app templates
+- **GitOps Config**: ArgoCD Application watching `kubernetes/infrastructure` in Gitea
+- **Infrastructure Manifests**: MetalLB, Ingress, cert-manager, ArgoCD configurations
+- **Network Details**: LoadBalancer pool 192.168.68.100-110, domain configuration
+- **Terraform Setup**: VM provisioning and k3s cluster configuration
 
 ## Advanced: Custom Tools and Prompts
 
