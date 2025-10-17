@@ -87,13 +87,13 @@ variable "network_bridge" {
 variable "network_gateway" {
   description = "Network gateway"
   type        = string
-  default     = "192.168.200.1"
+  default     = "192.168.68.1"
 }
 
 variable "dns_servers" {
   description = "DNS servers"
   type        = list(string)
-  default     = ["192.168.200.1", "8.8.8.8"]
+  default     = ["192.168.68.1", "8.8.8.8"]
 }
 
 variable "k3s_version" {
