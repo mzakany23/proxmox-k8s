@@ -2,6 +2,30 @@
 
 Automated 3-node Kubernetes cluster on Proxmox with k3s, Let's Encrypt HTTPS, and GitOps deployment.
 
+## Table of Contents
+
+- [Quick Start: Deploy a New App](#quick-start-deploy-a-new-app)
+- [Architecture](#architecture)
+- [Prerequisites](#prerequisites)
+- [Setup](#setup)
+  - [1. Create Proxmox Cloud-Init Template](#1-create-proxmox-cloud-init-template)
+  - [2. Configure Cloudflare](#2-configure-cloudflare)
+  - [3. Configure Local Environment](#3-configure-local-environment)
+  - [4. Configure Terraform](#4-configure-terraform)
+  - [5. Deploy Cluster](#5-deploy-cluster)
+  - [6. Install Infrastructure](#6-install-infrastructure)
+  - [7. Verify Setup](#7-verify-setup)
+- [Deploying Applications](#deploying-applications)
+  - [Simple Deployment (No GitOps)](#simple-deployment-no-gitops)
+  - [Advanced: GitOps with Gitea + ArgoCD](#advanced-gitops-with-gitea--argocd)
+- [AI-Assisted Deployments with MCP](#ai-assisted-deployments-with-mcp)
+- [Project Structure](#project-structure)
+- [Configuration](#configuration)
+- [Troubleshooting](#troubleshooting)
+- [Cleanup](#cleanup)
+- [Documentation](#documentation)
+- [Features](#features)
+
 ## Quick Start: Deploy a New App
 
 ```bash
@@ -172,17 +196,84 @@ Your app will be accessible at: `https://my-app.home.example.com`
 
 ### Advanced: GitOps with Gitea + ArgoCD
 
-1. **Initialize Gitea** (one-time):
-   - Access: `https://gitea.home.example.com`
-   - Database: PostgreSQL (already configured)
-   - Admin user: homelab / homelab123
+This repository is configured with dual remotes for maximum flexibility:
 
-2. **Create app repository in Gitea**
-3. **Push Kubernetes manifests to repo**
-4. **Create ArgoCD Application pointing to Gitea**
-5. **Changes auto-deploy** when you push to Gitea
+**Repository Setup:**
+```bash
+# Add Gitea as a second remote (if not already added)
+git remote add gitea https://gitea.home.example.com/homelab/proxmox-k8s.git
+
+# View all remotes
+git remote -v
+# origin → GitHub (public/backup)
+# gitea  → Gitea (local, watched by ArgoCD)
+
+# Push to both remotes
+git push origin main
+git push gitea main
+```
+
+**GitOps Workflow:**
+1. **ArgoCD watches** `kubernetes/infrastructure/` in the Gitea repo
+2. **Make infrastructure changes** locally in `kubernetes/infrastructure/`
+3. **Commit and push** to both remotes
+4. **ArgoCD auto-syncs** changes to cluster within seconds
+
+**Access Points:**
+- **Gitea**: `https://gitea.home.example.com` (homelab / homelab123)
+- **ArgoCD**: `https://argocd.home.example.com` (admin / see bootstrap output)
+
+**Initial Setup:**
+1. Run `./scripts/bootstrap-gitops.sh` (installs ArgoCD and Gitea)
+2. Create `proxmox-k8s` repo in Gitea via web UI
+3. Push code: `git push gitea main`
+4. ArgoCD Application is pre-configured to watch `kubernetes/infrastructure/`
 
 See `scripts/README.md` for automation scripts.
+
+## AI-Assisted Deployments with MCP
+
+This repository can be configured as an [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server to provide AI assistants with full context about your cluster setup, deployment workflows, and infrastructure configuration.
+
+### Quick Setup
+
+1. **Configure MCP Server** (see `MCP_SETUP.md` for full instructions):
+   ```json
+   {
+     "mcpServers": {
+       "proxmox-k8s-homelab": {
+         "command": "npx",
+         "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/proxmox"]
+       }
+     }
+   }
+   ```
+
+2. **Ask AI for Help** - Once configured, you can get deployment assistance:
+   ```
+   @proxmox-k8s: Help me deploy a React app with HTTPS to the cluster
+
+   @proxmox-k8s: Show me how to troubleshoot ArgoCD sync failures
+
+   @proxmox-k8s: Walk me through the GitOps workflow for infrastructure changes
+
+   @proxmox-k8s: What's the command to check certificate status?
+   ```
+
+The AI will have access to:
+- All deployment scripts and templates
+- Infrastructure manifests (MetalLB, Ingress, cert-manager, ArgoCD)
+- Network configuration and cluster architecture
+- GitOps workflow documentation
+- Troubleshooting guides
+
+**Benefits:**
+- Get step-by-step deployment instructions tailored to your setup
+- Troubleshoot issues with full cluster context
+- Learn commands and workflows interactively
+- Generate custom Kubernetes manifests following your templates
+
+See `MCP_SETUP.md` for detailed configuration instructions.
 
 ## Project Structure
 
