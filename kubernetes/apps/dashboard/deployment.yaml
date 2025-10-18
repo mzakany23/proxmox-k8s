@@ -101,7 +101,7 @@ data:
         <div class="container">
             <header>
                 <h1>🏠 Homelab Dashboard</h1>
-                <p class="subtitle">home.mcztest.com</p>
+                <p class="subtitle">dashboard.home.mcztest.com</p>
             </header>
             <div class="section">
                 <h2>Infrastructure Services</h2>
@@ -203,10 +203,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - home.mcztest.com
+    - dashboard.home.mcztest.com
     secretName: dashboard-tls
   rules:
-  - host: home.mcztest.com
+  - host: dashboard.home.mcztest.com
     http:
       paths:
       - path: /
