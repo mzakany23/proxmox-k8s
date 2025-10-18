@@ -19,6 +19,8 @@ Automated 3-node Kubernetes cluster on Proxmox with k3s, Let's Encrypt HTTPS, an
   - [Simple Deployment (No GitOps)](#simple-deployment-no-gitops)
   - [Advanced: GitOps with Gitea + ArgoCD](#advanced-gitops-with-gitea--argocd)
 - [AI-Assisted Deployments with MCP](#ai-assisted-deployments-with-mcp)
+- [Homelab Dashboard](#homelab-dashboard)
+- [Local Devices with HTTPS](#local-devices-with-https)
 - [Project Structure](#project-structure)
 - [Configuration](#configuration)
 - [Troubleshooting](#troubleshooting)
@@ -275,6 +277,82 @@ The AI will have access to:
 
 See `MCP_SETUP.md` for detailed configuration instructions.
 
+## Homelab Dashboard
+
+A beautiful landing page showing all your services and devices in one place.
+
+**Access:** https://home.mcztest.com
+
+**Features:**
+- Clean, modern interface with gradient background
+- Lists all infrastructure services (ArgoCD, Gitea, etc.)
+- Shows local devices with HTTPS access (Proxmox, Pi-hole, etc.)
+- Quick links to documentation and cluster info
+- Automatic HTTPS with Let's Encrypt
+- Mobile responsive
+
+**Customize:**
+Edit `kubernetes/apps/dashboard/deployment.yaml` to add your services, then:
+```bash
+kubectl apply -f kubernetes/apps/dashboard/deployment.yaml
+kubectl rollout restart deployment/dashboard
+```
+
+See `kubernetes/apps/dashboard/README.md` for details.
+
+## Local Devices with HTTPS
+
+Give your local network devices (Proxmox, Pi-hole, routers, NAS) friendly domain names with automatic HTTPS certificates.
+
+### Quick Start
+
+**1. Scan your network to find devices:**
+```bash
+./scripts/scan-network.sh
+```
+
+**2. Add DNS record (automatic via Cloudflare API):**
+```bash
+./scripts/add-dns.sh proxmox 192.168.68.2
+```
+
+**3. Create ingress with HTTPS:**
+```bash
+./scripts/add-device.sh proxmox 192.168.68.2 8006 https
+kubectl apply -f kubernetes/local-devices/proxmox-ingress.yaml
+```
+
+**4. Access with HTTPS:**
+```
+https://proxmox.home.example.com
+```
+
+### Supported Workflows
+
+**Option 1: Automated (Recommended)**
+```bash
+# One command to add DNS + create ingress
+./scripts/add-dns.sh pihole 192.168.68.3
+./scripts/add-device.sh pihole 192.168.68.3 80 http
+kubectl apply -f kubernetes/local-devices/pihole-ingress.yaml
+```
+
+**Option 2: Manual Cloudflare + Script**
+- Add DNS record manually in Cloudflare dashboard
+- Use `add-device.sh` to create ingress
+
+**Option 3: Full Manual**
+- Use pre-made templates in `kubernetes/local-devices/`
+
+### Benefits
+
+- ✅ **Automatic HTTPS** - Let's Encrypt certificates for every device
+- ✅ **No device config** - Devices don't need to support HTTPS
+- ✅ **Centralized** - Everything managed through Kubernetes
+- ✅ **Consistent** - All devices use *.home.example.com pattern
+
+See `kubernetes/local-devices/README.md` for detailed guide with examples.
+
 ## Project Structure
 
 ```
@@ -288,17 +366,23 @@ proxmox/
 │   ├── kubeconfig.yaml    # Generated (not in git)
 │   └── cloud-init/        # VM bootstrap templates
 ├── kubernetes/
-│   └── infrastructure/    # Core cluster components
-│       ├── metallb/
-│       ├── ingress-nginx/
-│       ├── cert-manager/
-│       └── argocd/
+│   ├── infrastructure/    # Core cluster components
+│   │   ├── metallb/
+│   │   ├── ingress-nginx/
+│   │   ├── cert-manager/
+│   │   └── argocd/
+│   ├── apps/
+│   │   └── dashboard/     # Homelab landing page
+│   └── local-devices/     # Local device ingresses (Proxmox, etc.)
 ├── templates/
 │   ├── frontend-app/      # App with HTTPS ingress
 │   └── backend-app/       # Internal service only
 └── scripts/
     ├── bootstrap-gitops.sh  # Install infrastructure
-    └── deploy-app.sh        # Deploy application
+    ├── deploy-app.sh        # Deploy application
+    ├── add-dns.sh           # Add Cloudflare DNS record
+    ├── add-device.sh        # Create device ingress
+    └── scan-network.sh      # Discover network devices
 ```
 
 ## Configuration
@@ -384,3 +468,8 @@ terraform destroy
 - **Simple Deployment** - Deploy apps with one script
 - **Template System** - Pre-configured frontend/backend templates
 - **Production Ready** - Resource limits, health checks, auto-scaling ready
+- **Homelab Dashboard** - Beautiful landing page at home.example.com
+- **Local Device HTTPS** - Automatic certificates for Proxmox, routers, NAS, etc.
+- **Automated DNS** - Manage Cloudflare DNS via API
+- **Network Discovery** - Scan and find all devices on your network
+- **AI Assistant Ready** - MCP server for Claude and other AI tools
