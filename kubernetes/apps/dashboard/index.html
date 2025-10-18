@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homelab Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .service-card {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s;
+            display: block;
+        }
+
+        .service-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+
+        .service-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .service-url {
+            font-size: 0.9rem;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            word-break: break-all;
+        }
+
+        .service-description {
+            font-size: 0.85rem;
+            color: #718096;
+            line-height: 1.4;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #48bb78;
+            color: white;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .badge.infrastructure {
+            background: #4299e1;
+        }
+
+        .badge.device {
+            background: #ed8936;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            margin-top: 3rem;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏠 Homelab Dashboard</h1>
+            <p class="subtitle">home.mcztest.com</p>
+        </header>
+
+        <div class="section">
+            <h2>
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                </svg>
+                Infrastructure Services
+            </h2>
+            <div class="services-grid">
+                <a href="https://argocd.home.mcztest.com" class="service-card" target="_blank">
+                    <div class="service-name">ArgoCD</div>
+                    <div class="service-url">argocd.home.mcztest.com</div>
+                    <div class="service-description">GitOps continuous deployment - sync infrastructure from Gitea</div>
+                    <span class="badge infrastructure">GitOps</span>
+                </a>
+
+                <a href="https://gitea.home.mcztest.com" class="service-card" target="_blank">
+                    <div class="service-name">Gitea</div>
+                    <div class="service-url">gitea.home.mcztest.com</div>
+                    <div class="service-description">Self-hosted Git server for private repositories</div>
+                    <span class="badge infrastructure">Git</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                </svg>
+                Local Devices
+            </h2>
+            <div class="services-grid">
+                <a href="https://proxmox.home.mcztest.com" class="service-card" target="_blank">
+                    <div class="service-name">Proxmox VE</div>
+                    <div class="service-url">proxmox.home.mcztest.com</div>
+                    <div class="service-description">Hypervisor - Manage VMs and containers</div>
+                    <span class="badge device">Hypervisor</span>
+                </a>
+
+                <!-- Add more devices as configured -->
+                <!--
+                <a href="https://pihole.home.mcztest.com" class="service-card" target="_blank">
+                    <div class="service-name">Pi-hole</div>
+                    <div class="service-url">pihole.home.mcztest.com</div>
+                    <div class="service-description">Network-wide ad blocking and DNS</div>
+                    <span class="badge device">DNS</span>
+                </a>
+                -->
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z"/>
+                    <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z"/>
+                    <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z"/>
+                </svg>
+                Applications
+            </h2>
+            <div class="services-grid">
+                <div class="service-card" style="opacity: 0.6; cursor: default;">
+                    <div class="service-name">No apps deployed yet</div>
+                    <div class="service-description">Deploy your first app with:<br><code>./scripts/deploy-app.sh my-app frontend nginx:alpine</code></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+                Quick Links
+            </h2>
+            <div class="services-grid">
+                <a href="https://github.com/mzakany23/proxmox-k8s" class="service-card" target="_blank">
+                    <div class="service-name">GitHub Repository</div>
+                    <div class="service-description">View source code and documentation</div>
+                </a>
+
+                <div class="service-card" style="cursor: default;">
+                    <div class="service-name">Kubernetes Cluster</div>
+                    <div class="service-description">
+                        3-node k3s cluster<br>
+                        <small>Control: 192.168.68.69<br>Workers: 192.168.68.70-71</small>
+                    </div>
+                </div>
+
+                <div class="service-card" style="cursor: default;">
+                    <div class="service-name">Network</div>
+                    <div class="service-description">
+                        LoadBalancer: 192.168.68.100-110<br>
+                        Domain: *.home.mcztest.com
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>Proxmox Kubernetes Homelab with GitOps</p>
+            <p style="font-size: 0.9rem; margin-top: 0.5rem;">Let's Encrypt HTTPS • ArgoCD • Gitea • k3s</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,218 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-html
+  namespace: default
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Homelab Dashboard</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                padding: 2rem;
+                color: #333;
+            }
+            .container { max-width: 1200px; margin: 0 auto; }
+            header { text-align: center; color: white; margin-bottom: 3rem; }
+            h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+            .subtitle { font-size: 1.1rem; opacity: 0.9; }
+            .section {
+                background: white;
+                border-radius: 12px;
+                padding: 2rem;
+                margin-bottom: 2rem;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            }
+            .section h2 {
+                color: #667eea;
+                margin-bottom: 1.5rem;
+                font-size: 1.5rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            .services-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 1rem;
+            }
+            .service-card {
+                background: #f7fafc;
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 1.5rem;
+                text-decoration: none;
+                color: inherit;
+                transition: all 0.2s;
+                display: block;
+            }
+            .service-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+                border-color: #667eea;
+            }
+            .service-name {
+                font-size: 1.2rem;
+                font-weight: 600;
+                color: #2d3748;
+                margin-bottom: 0.5rem;
+            }
+            .service-url {
+                font-size: 0.9rem;
+                color: #667eea;
+                margin-bottom: 0.5rem;
+                word-break: break-all;
+            }
+            .service-description {
+                font-size: 0.85rem;
+                color: #718096;
+                line-height: 1.4;
+            }
+            .badge {
+                display: inline-block;
+                padding: 0.25rem 0.75rem;
+                background: #48bb78;
+                color: white;
+                border-radius: 12px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                margin-top: 0.5rem;
+            }
+            .badge.infrastructure { background: #4299e1; }
+            .badge.device { background: #ed8936; }
+            .footer {
+                text-align: center;
+                color: white;
+                opacity: 0.8;
+                margin-top: 3rem;
+            }
+            .icon { width: 20px; height: 20px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>🏠 Homelab Dashboard</h1>
+                <p class="subtitle">home.mcztest.com</p>
+            </header>
+            <div class="section">
+                <h2>Infrastructure Services</h2>
+                <div class="services-grid">
+                    <a href="https://argocd.home.mcztest.com" class="service-card" target="_blank">
+                        <div class="service-name">ArgoCD</div>
+                        <div class="service-url">argocd.home.mcztest.com</div>
+                        <div class="service-description">GitOps continuous deployment</div>
+                        <span class="badge infrastructure">GitOps</span>
+                    </a>
+                    <a href="https://gitea.home.mcztest.com" class="service-card" target="_blank">
+                        <div class="service-name">Gitea</div>
+                        <div class="service-url">gitea.home.mcztest.com</div>
+                        <div class="service-description">Self-hosted Git server</div>
+                        <span class="badge infrastructure">Git</span>
+                    </a>
+                </div>
+            </div>
+            <div class="section">
+                <h2>Local Devices</h2>
+                <div class="services-grid">
+                    <a href="https://proxmox.home.mcztest.com" class="service-card" target="_blank">
+                        <div class="service-name">Proxmox VE</div>
+                        <div class="service-url">proxmox.home.mcztest.com</div>
+                        <div class="service-description">Hypervisor - Manage VMs</div>
+                        <span class="badge device">Hypervisor</span>
+                    </a>
+                </div>
+            </div>
+            <div class="section">
+                <h2>Quick Links</h2>
+                <div class="services-grid">
+                    <a href="https://github.com/mzakany23/proxmox-k8s" class="service-card" target="_blank">
+                        <div class="service-name">GitHub Repository</div>
+                        <div class="service-description">View source code and documentation</div>
+                    </a>
+                    <div class="service-card" style="cursor: default;">
+                        <div class="service-name">Kubernetes Cluster</div>
+                        <div class="service-description">3-node k3s cluster</div>
+                    </div>
+                </div>
+            </div>
+            <footer class="footer">
+                <p>Proxmox Kubernetes Homelab with GitOps</p>
+                <p style="font-size: 0.9rem; margin-top: 0.5rem;">Let's Encrypt HTTPS • ArgoCD • Gitea • k3s</p>
+            </footer>
+        </div>
+    </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dashboard
+  template:
+    metadata:
+      labels:
+        app: dashboard
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: html
+        configMap:
+          name: dashboard-html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard
+  namespace: default
+spec:
+  selector:
+    app: dashboard
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dashboard
+  namespace: default
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - home.mcztest.com
+    secretName: dashboard-tls
+  rules:
+  - host: home.mcztest.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: dashboard
+            port:
+              number: 80
