@@ -35,6 +35,12 @@ data:
     access_control:
       default_policy: deny
       rules:
+        # Bypass Authelia for git operations (git push/pull)
+        - domain: gitea.home.mcztest.com
+          resources:
+            - "^/.*/(git-upload-pack|git-receive-pack|info/refs|HEAD|objects/.*)$"
+          policy: bypass
+
         # All services require two-factor authentication
         - domain: home.mcztest.com
           policy: two_factor
