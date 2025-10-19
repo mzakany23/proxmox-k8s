@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authelia-config
+  namespace: authelia
+data:
+  configuration.yml: |
+    ---
+    theme: light
+    default_redirection_url: https://home.mcztest.com
+
+    server:
+      host: 0.0.0.0
+      port: 9091
+      asset_path: /config/assets/
+
+    log:
+      level: info
+
+    totp:
+      issuer: home.mcztest.com
+      period: 30
+      skew: 1
+
+    authentication_backend:
+      file:
+        path: /config/users_database.yml
+        password:
+          algorithm: argon2id
+          iterations: 1
+          key_length: 32
+          salt_length: 16
+          memory: 64
+          parallelism: 8
+
+    access_control:
+      default_policy: deny
+      rules:
+        # Public dashboard
+        - domain: home.mcztest.com
+          policy: bypass
+
+        # Protected services require authentication
+        - domain: argocd.home.mcztest.com
+          policy: two_factor
+
+        - domain: gitea.home.mcztest.com
+          policy: two_factor
+
+        - domain: pihole.home.mcztest.com
+          policy: two_factor
+
+        - domain: registry.home.mcztest.com
+          policy: two_factor
+
+        - domain: registry-api.home.mcztest.com
+          policy: two_factor
+
+    session:
+      name: authelia_session
+      domain: home.mcztest.com
+      same_site: lax
+      expiration: 1h
+      inactivity: 5m
+      remember_me_duration: 1M
+      redis:
+        host: redis
+        port: 6379
+
+    regulation:
+      max_retries: 3
+      find_time: 2m
+      ban_time: 5m
+
+    storage:
+      local:
+        path: /config/db.sqlite3
+
+    notifier:
+      filesystem:
+        filename: /config/notification.txt
