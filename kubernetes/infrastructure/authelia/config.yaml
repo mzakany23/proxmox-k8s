@@ -75,9 +75,9 @@ data:
       name: authelia_session
       domain: home.mcztest.com
       same_site: lax
-      expiration: 1h
-      inactivity: 5m
-      remember_me_duration: 1M
+      expiration: 12h
+      inactivity: 4h
+      remember_me: 30d
       redis:
         host: redis
         port: 6379
