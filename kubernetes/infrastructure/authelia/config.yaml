@@ -83,9 +83,9 @@ data:
         port: 6379
 
     regulation:
-      max_retries: 3
-      find_time: 2m
-      ban_time: 5m
+      max_retries: 100
+      find_time: 5m
+      ban_time: 10m
 
     storage:
       local:
