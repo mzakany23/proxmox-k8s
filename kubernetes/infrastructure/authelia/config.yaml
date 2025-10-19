@@ -27,6 +27,7 @@ data:
       attestation_conveyance_preference: indirect
       user_verification: preferred
       timeout: 60s
+      relying_party_id: home.mcztest.com
 
     authentication_backend:
       file:
