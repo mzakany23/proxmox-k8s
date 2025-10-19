@@ -7,4 +7,5 @@ resources:
   - config.yaml
   - authelia.yaml
   - sealed-secrets.yaml
+  - sealed-smtp-secret.yaml
   - ingress.yaml
