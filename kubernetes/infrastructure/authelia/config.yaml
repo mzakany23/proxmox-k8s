@@ -85,5 +85,14 @@ data:
         path: /config/db.sqlite3
 
     notifier:
-      filesystem:
-        filename: /config/notification.txt
+      smtp:
+        host: smtp.gmail.com
+        port: 587
+        username: mzakany@gmail.com
+        sender: "Authelia <mzakany@gmail.com>"
+        subject: "[Authelia] {title}"
+        startup_check_address: mzakany@gmail.com
+        disable_require_tls: false
+        disable_html_emails: false
+        tls:
+          skip_verify: false
