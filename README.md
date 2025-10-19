@@ -1,11 +1,12 @@
 # Proxmox Kubernetes Cluster with Terraform
 
-Automated 3-node Kubernetes cluster on Proxmox with k3s, Let's Encrypt HTTPS, and GitOps deployment.
+Enterprise-grade 3-node Kubernetes cluster on Proxmox with k3s, Let's Encrypt HTTPS, SSO authentication, and GitOps deployment.
 
 ## Table of Contents
 
 - [Quick Start: Deploy a New App](#quick-start-deploy-a-new-app)
 - [Architecture](#architecture)
+- [Security & Authentication](#security--authentication)
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
   - [1. Create Proxmox Cloud-Init Template](#1-create-proxmox-cloud-init-template)
@@ -15,12 +16,14 @@ Automated 3-node Kubernetes cluster on Proxmox with k3s, Let's Encrypt HTTPS, an
   - [5. Deploy Cluster](#5-deploy-cluster)
   - [6. Install Infrastructure](#6-install-infrastructure)
   - [7. Verify Setup](#7-verify-setup)
+  - [8. Configure SSO Authentication](#8-configure-sso-authentication)
 - [Deploying Applications](#deploying-applications)
   - [Simple Deployment (No GitOps)](#simple-deployment-no-gitops)
   - [Advanced: GitOps with Gitea + ArgoCD](#advanced-gitops-with-gitea--argocd)
 - [AI-Assisted Deployments with MCP](#ai-assisted-deployments-with-mcp)
 - [Homelab Dashboard](#homelab-dashboard)
 - [Local Devices with HTTPS](#local-devices-with-https)
+- [User Management](#user-management)
 - [Project Structure](#project-structure)
 - [Configuration](#configuration)
 - [Troubleshooting](#troubleshooting)
@@ -53,8 +56,11 @@ Apps are automatically configured with:
 - **MetalLB** - LoadBalancer for bare metal Kubernetes
 - **Nginx Ingress** - HTTP/HTTPS routing with TLS termination
 - **cert-manager** - Automated Let's Encrypt certificates via Cloudflare DNS-01
-- **ArgoCD** - GitOps continuous deployment (optional)
-- **Gitea** - Self-hosted Git for private repos (optional)
+- **Authelia** - SSO authentication with 2FA (WebAuthn/TOTP)
+- **Redis** - Session storage for Authelia
+- **Sealed Secrets** - Encrypted secrets management (safe for Git)
+- **ArgoCD** - GitOps continuous deployment
+- **Gitea** - Self-hosted Git for private repos
 
 **Network:**
 - Control Plane: 1 node (k8s-control-1)
@@ -62,6 +68,63 @@ Apps are automatically configured with:
 - LoadBalancer IP Pool: Configurable (default: 192.168.68.100-110)
 - Ingress Controller: First IP from MetalLB pool
 - DNS: Cloudflare wildcard DNS pointing to Ingress IP
+
+## Security & Authentication
+
+This cluster implements **enterprise-grade security** with Single Sign-On (SSO) and Two-Factor Authentication (2FA) for all services.
+
+### Authentication Flow
+
+1. **User accesses any service** → Redirected to Authelia login (`https://auth.home.example.com`)
+2. **Enter credentials** → Username + Password
+3. **Complete 2FA** → WebAuthn (Face ID/Touch ID) or TOTP app
+4. **Session established** → Access granted for 12 hours (4-hour inactivity timeout)
+
+### Protected Services
+
+All infrastructure services require authentication:
+- **Dashboard** (`home.example.com`) - Homelab landing page
+- **ArgoCD** (`argocd.home.example.com`) - GitOps management
+- **Gitea** (`gitea.home.example.com`) - Web UI only (git operations use basic auth)
+- **Pi-hole** (`pihole.home.example.com`) - DNS management
+- **Container Registry** (`registry.home.example.com`) - Docker images
+- **App Registry API** (`registry-api.home.example.com`) - Write operations only
+
+### Authentication Bypass Rules
+
+For automation and usability:
+- **Git operations** (push/pull) - Use Gitea credentials, bypass SSO
+- **Registry API reads** (`/api/v1/apps`, `/health`) - Public for dashboard
+- **Future user apps** - Can be configured per-app
+
+### Security Features
+
+- **SSO with 2FA** - Single authentication point for all services
+- **WebAuthn Support** - Use Face ID, Touch ID, or security keys (easy for family)
+- **TOTP Support** - Traditional authenticator apps (Google Authenticator, Authy)
+- **Session Management** - Redis-backed sessions with configurable timeouts
+- **Email Notifications** - Gmail SMTP for password resets and 2FA setup
+- **Encrypted Secrets** - Sealed Secrets encrypt credentials before Git commit
+- **Rate Limiting** - Protection against brute force attacks
+- **Group-Based Access** - Ready for multi-user with role-based permissions
+
+### Default Credentials
+
+**Admin User:**
+- URL: `https://auth.home.example.com`
+- Username: `admin`
+- Password: Set during installation
+- Email: Your Gmail address
+- **WARNING: Change default password immediately after first login**
+
+### Multi-User Support
+
+Ready to add family members or team members with different permission levels:
+- **Admin Group** - Full access to all services
+- **Family Group** - Access to user applications only (future)
+- **Developer Group** - Access to Gitea, Registry, ArgoCD (future)
+
+See [User Management](#user-management) section for adding users.
 
 ## Prerequisites
 
@@ -182,6 +245,41 @@ kubectl get certificate -A
 # Certificates should be Ready
 ```
 
+### 8. Configure SSO Authentication
+
+The cluster is now protected with Authelia SSO. All infrastructure services require authentication with 2FA.
+
+**First Time Login:**
+```bash
+# Access Authelia
+open https://auth.home.example.com
+
+# Login with admin credentials
+# Username: admin
+# Password: (set during bootstrap)
+```
+
+**Set Up 2FA:**
+1. Go to https://auth.home.example.com settings
+2. Click "ADD" under "WebAuthn Credentials"
+3. Check your email for the verification code
+4. Follow prompts to register Face ID/Touch ID or security key
+
+**Session Configuration:**
+- Session duration: 12 hours
+- Inactivity timeout: 4 hours
+- Remember me: 30 days (if checkbox selected)
+
+**Email Notifications:**
+- SMTP configured via Gmail
+- Password resets sent to your email
+- 2FA setup codes delivered via email
+
+All infrastructure services now require authentication:
+- Dashboard, ArgoCD, Gitea (web UI), Pi-hole, Registry, Registry API
+
+Git operations (push/pull) bypass SSO and use Gitea credentials.
+
 ## Deploying Applications
 
 ### Simple Deployment (No GitOps)
@@ -281,7 +379,7 @@ See `MCP_SETUP.md` for detailed configuration instructions.
 
 A beautiful landing page showing all your services and devices in one place.
 
-**Access:** https://home.mcztest.com
+**Access:** https://home.example.com
 
 **Features:**
 - Clean, modern interface with gradient background
@@ -447,6 +545,96 @@ kubectl get certificaterequest -A
 3. Check DNS: `dig app-name.home.example.com`
 4. Verify Cloudflare wildcard DNS points to correct IP
 
+**Authentication Issues:**
+```bash
+# Check Authelia logs
+kubectl logs -n authelia -l app=authelia --tail=50
+
+# Check if rate limited (clear Redis)
+kubectl exec -n authelia redis-<pod-name> -- redis-cli FLUSHALL
+
+# Restart Authelia
+kubectl delete pod -n authelia -l app=authelia
+```
+
+## User Management
+
+The cluster supports multi-user access with group-based permissions. Currently configured with admin-only access.
+
+### Current User
+
+**Admin:**
+- Username: `admin`
+- Email: Your Gmail address (configured during setup)
+- Groups: `admins`
+- Access: All services
+
+### Adding Family Members (Future)
+
+To add family users with limited access:
+
+1. **Edit user database** in `kubernetes/infrastructure/authelia/authelia.yaml`:
+```yaml
+users:
+  admin:
+    displayname: "Admin User"
+    password: "$argon2id$v=19$..."
+    email: admin@example.com
+    groups:
+      - admins
+
+  jane:
+    displayname: "Jane Doe"
+    password: "$argon2id$v=19$..."  # Generate with authelia hash
+    email: jane@example.com
+    groups:
+      - family
+```
+
+2. **Configure access control** in `kubernetes/infrastructure/authelia/config.yaml`:
+```yaml
+access_control:
+  rules:
+    # Admin-only infrastructure
+    - domain: argocd.home.example.com
+      policy: two_factor
+      subject: "group:admins"
+
+    # Family can access dashboard and user apps
+    - domain: home.example.com
+      policy: two_factor
+      subject:
+        - "group:admins"
+        - "group:family"
+```
+
+3. **Generate password hash:**
+```bash
+kubectl run authelia-hash --image=authelia/authelia:latest --rm --restart=Never -- \
+  authelia crypto hash generate argon2 --password "user-password"
+```
+
+4. **Commit and deploy:**
+```bash
+git add kubernetes/infrastructure/authelia/
+git commit -m "Add new user: jane"
+git push && git push gitea main
+```
+
+5. **User setup:**
+- New user receives email with login details
+- First login: https://auth.home.example.com
+- Set up WebAuthn (Face ID/Touch ID) for easy 2FA
+
+### Group-Based Access
+
+**Planned Groups:**
+- **admins** - Full access (ArgoCD, Gitea, Registry, Pi-hole, all apps)
+- **family** - Dashboard + user applications only
+- **developers** - Gitea, Registry, ArgoCD (for development team)
+
+Currently only `admins` group is active. Family group structure is ready for future implementation.
+
 ## Cleanup
 
 ```bash
@@ -463,6 +651,12 @@ terraform destroy
 ## Features
 
 - **Automated Infrastructure** - One command cluster deployment
+- **Enterprise SSO** - Authelia authentication with 2FA for all services
+- **WebAuthn/TOTP** - Face ID, Touch ID, or authenticator app support
+- **Encrypted Secrets** - Sealed Secrets for safe Git storage
+- **Multi-User Ready** - Group-based access control (admin/family/developer)
+- **Email Notifications** - Gmail SMTP for password resets and 2FA codes
+- **Session Management** - Redis-backed with configurable timeouts
 - **Trusted HTTPS** - Let's Encrypt certificates (no browser warnings!)
 - **GitOps Ready** - ArgoCD + Gitea for private repos
 - **Simple Deployment** - Deploy apps with one script
