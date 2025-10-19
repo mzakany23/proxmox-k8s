@@ -45,6 +45,8 @@ metadata:
   namespace: default
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    nginx.ingress.kubernetes.io/auth-url: "https://auth.home.mcztest.com/api/verify"
+    nginx.ingress.kubernetes.io/auth-signin: "https://auth.home.mcztest.com?rd=$escaped_request_uri"
 spec:
   ingressClassName: nginx
   tls:

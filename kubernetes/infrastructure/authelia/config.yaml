@@ -35,11 +35,10 @@ data:
     access_control:
       default_policy: deny
       rules:
-        # Public dashboard
+        # All services require two-factor authentication
         - domain: home.mcztest.com
-          policy: bypass
+          policy: two_factor
 
-        # Protected services require authentication
         - domain: argocd.home.mcztest.com
           policy: two_factor
 
