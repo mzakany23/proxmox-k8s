@@ -1,0 +1,31 @@
+name: Build and Push to Registry
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build and push with Kaniko
+        uses: docker://gcr.io/kaniko-project/executor:latest
+        with:
+          args: >
+            --dockerfile=Dockerfile
+            --context=.
+            --destination=registry.home.mcztest.com/${{ gitea.repository }}:${{ gitea.sha }}
+            --destination=registry.home.mcztest.com/${{ gitea.repository }}:latest
+            --insecure
+            --skip-tls-verify
+            --cache=true
+            --cache-repo=registry.home.mcztest.com/cache
+
+      - name: Notify success
+        run: |
+          echo "Image built and pushed successfully!"
+          echo "Image: registry.home.mcztest.com/${{ gitea.repository }}:${{ gitea.sha }}"
+          echo "Latest: registry.home.mcztest.com/${{ gitea.repository }}:latest"
