@@ -6,3 +6,4 @@ resources:
 - ingress-nginx/install.yaml
 - cert-manager/
 - sealed-secrets/sealed-secrets.yaml
+- authelia/
