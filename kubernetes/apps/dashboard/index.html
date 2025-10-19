@@ -146,20 +146,10 @@
                 </svg>
                 Infrastructure Services
             </h2>
-            <div class="services-grid">
-                <a href="https://argocd.home.mcztest.com" class="service-card" target="_blank">
-                    <div class="service-name">ArgoCD</div>
-                    <div class="service-url">argocd.home.mcztest.com</div>
-                    <div class="service-description">GitOps continuous deployment - sync infrastructure from Gitea</div>
-                    <span class="badge infrastructure">GitOps</span>
-                </a>
-
-                <a href="https://gitea.home.mcztest.com" class="service-card" target="_blank">
-                    <div class="service-name">Gitea</div>
-                    <div class="service-url">gitea.home.mcztest.com</div>
-                    <div class="service-description">Self-hosted Git server for private repositories</div>
-                    <span class="badge infrastructure">Git</span>
-                </a>
+            <div class="services-grid" id="infrastructure-grid">
+                <div class="service-card" style="opacity: 0.6; cursor: default;">
+                    <div class="service-name">Loading...</div>
+                </div>
             </div>
         </div>
 
@@ -170,23 +160,10 @@
                 </svg>
                 Local Devices
             </h2>
-            <div class="services-grid">
-                <a href="https://proxmox.home.mcztest.com" class="service-card" target="_blank">
-                    <div class="service-name">Proxmox VE</div>
-                    <div class="service-url">proxmox.home.mcztest.com</div>
-                    <div class="service-description">Hypervisor - Manage VMs and containers</div>
-                    <span class="badge device">Hypervisor</span>
-                </a>
-
-                <!-- Add more devices as configured -->
-                <!--
-                <a href="https://pihole.home.mcztest.com" class="service-card" target="_blank">
-                    <div class="service-name">Pi-hole</div>
-                    <div class="service-url">pihole.home.mcztest.com</div>
-                    <div class="service-description">Network-wide ad blocking and DNS</div>
-                    <span class="badge device">DNS</span>
-                </a>
-                -->
+            <div class="services-grid" id="devices-grid">
+                <div class="service-card" style="opacity: 0.6; cursor: default;">
+                    <div class="service-name">Loading...</div>
+                </div>
             </div>
         </div>
 
@@ -201,7 +178,7 @@
             </h2>
             <div class="services-grid" id="applications-grid">
                 <div class="service-card" style="opacity: 0.6; cursor: default;">
-                    <div class="service-name">Loading applications...</div>
+                    <div class="service-name">Loading...</div>
                 </div>
             </div>
         </div>
@@ -246,38 +223,84 @@
     <script>
         // Fetch and render applications from registry API
         async function loadApplications() {
-            const grid = document.getElementById('applications-grid');
+            const infrastructureGrid = document.getElementById('infrastructure-grid');
+            const devicesGrid = document.getElementById('devices-grid');
+            const applicationsGrid = document.getElementById('applications-grid');
 
             try {
                 const response = await fetch('https://registry-api.home.mcztest.com/api/v1/apps');
                 const apps = await response.json();
 
-                if (apps.length === 0) {
-                    grid.innerHTML = `
+                // Group apps by category
+                const infrastructure = apps.filter(app => app.category === 'infrastructure');
+                const devices = apps.filter(app => app.category === 'device');
+                const applications = apps.filter(app => app.category === 'application' || app.category === 'service');
+
+                // Render infrastructure
+                if (infrastructure.length === 0) {
+                    infrastructureGrid.innerHTML = `
+                        <div class="service-card" style="opacity: 0.6; cursor: default;">
+                            <div class="service-name">No infrastructure services</div>
+                        </div>
+                    `;
+                } else {
+                    infrastructureGrid.innerHTML = infrastructure.map(app => `
+                        <a href="${app.url}" class="service-card" target="_blank">
+                            <div class="service-name">${app.name}</div>
+                            <div class="service-url">${app.url.replace('https://', '').replace('http://', '')}</div>
+                            <div class="service-description">${app.description || 'No description'}</div>
+                            <span class="badge infrastructure">${app.category}</span>
+                        </a>
+                    `).join('');
+                }
+
+                // Render devices
+                if (devices.length === 0) {
+                    devicesGrid.innerHTML = `
+                        <div class="service-card" style="opacity: 0.6; cursor: default;">
+                            <div class="service-name">No devices registered</div>
+                        </div>
+                    `;
+                } else {
+                    devicesGrid.innerHTML = devices.map(app => `
+                        <a href="${app.url}" class="service-card" target="_blank">
+                            <div class="service-name">${app.name}</div>
+                            <div class="service-url">${app.url.replace('https://', '').replace('http://', '')}</div>
+                            <div class="service-description">${app.description || 'No description'}</div>
+                            <span class="badge device">${app.category}</span>
+                        </a>
+                    `).join('');
+                }
+
+                // Render applications
+                if (applications.length === 0) {
+                    applicationsGrid.innerHTML = `
                         <div class="service-card" style="opacity: 0.6; cursor: default;">
                             <div class="service-name">No apps deployed yet</div>
                             <div class="service-description">Deploy your first app with:<br><code>./scripts/deploy-app.sh my-app frontend nginx:alpine</code></div>
                         </div>
                     `;
-                    return;
+                } else {
+                    applicationsGrid.innerHTML = applications.map(app => `
+                        <a href="${app.url}" class="service-card" target="_blank">
+                            <div class="service-name">${app.name}</div>
+                            <div class="service-url">${app.url.replace('https://', '').replace('http://', '')}</div>
+                            <div class="service-description">${app.description || 'No description'}</div>
+                            <span class="badge">${app.category}</span>
+                        </a>
+                    `).join('');
                 }
-
-                grid.innerHTML = apps.map(app => `
-                    <a href="${app.url}" class="service-card" target="_blank">
-                        <div class="service-name">${app.name}</div>
-                        <div class="service-url">${app.url}</div>
-                        <div class="service-description">${app.description || 'No description'}</div>
-                        <span class="badge">${app.category || 'app'}</span>
-                    </a>
-                `).join('');
             } catch (error) {
                 console.error('Failed to load applications:', error);
-                grid.innerHTML = `
+                const errorMsg = `
                     <div class="service-card" style="opacity: 0.6; cursor: default;">
-                        <div class="service-name">Unable to load applications</div>
+                        <div class="service-name">Unable to load</div>
                         <div class="service-description">Error connecting to registry API</div>
                     </div>
                 `;
+                infrastructureGrid.innerHTML = errorMsg;
+                devicesGrid.innerHTML = errorMsg;
+                applicationsGrid.innerHTML = errorMsg;
             }
         }
 
