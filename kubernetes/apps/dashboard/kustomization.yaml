@@ -7,5 +7,3 @@ configMapGenerator:
   - name: dashboard-html
     files:
       - index.html
-generatorOptions:
-  disableNameSuffixHash: true
