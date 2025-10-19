@@ -45,6 +45,13 @@ data:
             - "^/.*/objects/.*$"
           policy: bypass
 
+        # Bypass Authelia for registry API read operations (used by dashboard)
+        - domain: registry-api.home.mcztest.com
+          resources:
+            - "^/api/v1/apps$"
+            - "^/health$"
+          policy: bypass
+
         # All services require two-factor authentication
         - domain: home.mcztest.com
           policy: two_factor
