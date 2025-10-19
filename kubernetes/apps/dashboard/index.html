@@ -199,10 +199,9 @@
                 </svg>
                 Applications
             </h2>
-            <div class="services-grid">
+            <div class="services-grid" id="applications-grid">
                 <div class="service-card" style="opacity: 0.6; cursor: default;">
-                    <div class="service-name">No apps deployed yet</div>
-                    <div class="service-description">Deploy your first app with:<br><code>./scripts/deploy-app.sh my-app frontend nginx:alpine</code></div>
+                    <div class="service-name">Loading applications...</div>
                 </div>
             </div>
         </div>
@@ -243,5 +242,50 @@
             <p style="font-size: 0.9rem; margin-top: 0.5rem;">Let's Encrypt HTTPS • ArgoCD • Gitea • k3s</p>
         </footer>
     </div>
+
+    <script>
+        // Fetch and render applications from registry API
+        async function loadApplications() {
+            const grid = document.getElementById('applications-grid');
+
+            try {
+                const response = await fetch('https://registry-api.home.mcztest.com/api/v1/apps');
+                const apps = await response.json();
+
+                if (apps.length === 0) {
+                    grid.innerHTML = `
+                        <div class="service-card" style="opacity: 0.6; cursor: default;">
+                            <div class="service-name">No apps deployed yet</div>
+                            <div class="service-description">Deploy your first app with:<br><code>./scripts/deploy-app.sh my-app frontend nginx:alpine</code></div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = apps.map(app => `
+                    <a href="${app.url}" class="service-card" target="_blank">
+                        <div class="service-name">${app.name}</div>
+                        <div class="service-url">${app.url}</div>
+                        <div class="service-description">${app.description || 'No description'}</div>
+                        <span class="badge">${app.category || 'app'}</span>
+                    </a>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load applications:', error);
+                grid.innerHTML = `
+                    <div class="service-card" style="opacity: 0.6; cursor: default;">
+                        <div class="service-name">Unable to load applications</div>
+                        <div class="service-description">Error connecting to registry API</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Load apps on page load
+        loadApplications();
+
+        // Reload apps every 30 seconds
+        setInterval(loadApplications, 30000);
+    </script>
 </body>
 </html>

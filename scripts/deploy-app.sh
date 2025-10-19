@@ -86,6 +86,27 @@ kubectl apply -k "$DEPLOY_DIR"
 echo "⏳ Waiting for deployment to be ready..."
 kubectl wait --for=condition=available --timeout=120s deployment/$APP_NAME -n "$NAMESPACE" || true
 
+# Register app with App Registry API
+echo "📝 Registering app with registry..."
+if [ "$APP_TYPE" = "frontend" ]; then
+    APP_URL="https://$APP_NAME.$APP_DOMAIN"
+    DESCRIPTION="Frontend application"
+    CATEGORY="application"
+else
+    APP_URL="http://$APP_NAME.$NAMESPACE.svc.cluster.local"
+    DESCRIPTION="Backend service"
+    CATEGORY="service"
+fi
+
+curl -k -X POST https://registry-api.home.mcztest.com/api/v1/apps \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"name\": \"$APP_NAME\",
+    \"url\": \"$APP_URL\",
+    \"description\": \"$DESCRIPTION\",
+    \"category\": \"$CATEGORY\"
+  }" 2>/dev/null && echo "App registered!" || echo "Warning: Could not register app with registry"
+
 # Show status
 echo ""
 echo "✅ Deployment complete!"
@@ -99,10 +120,13 @@ if [ "$APP_TYPE" = "frontend" ]; then
     echo "     ./scripts/add-dns.sh $APP_NAME"
     echo ""
     echo "  2. Access your app:"
-    echo "     https://$APP_NAME.apps.homelab"
+    echo "     https://$APP_NAME.$APP_DOMAIN"
+    echo ""
+    echo "  3. View on dashboard:"
+    echo "     https://home.mcztest.com"
 else
     echo "📝 Service accessible within cluster at:"
-    echo "   http://$APP_NAME.$NAMESPACE.svc.cluster.local"
+    echo "   $APP_URL"
 fi
 
 echo ""
