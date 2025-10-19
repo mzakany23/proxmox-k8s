@@ -22,7 +22,7 @@ data:
       admin:
         displayname: "Admin User"
         password: "$argon2id$v=19$m=65536,t=3,p=4$vmI3odHrLTpaMFazHAElSw$m6Iro6Q+S4fIkvIzAOUGgVANvRrkwclH83jEK3wciZU"
-        email: admin@home.mcztest.com
+        email: mzakany@gmail.com
         groups:
           - admins
 ---
