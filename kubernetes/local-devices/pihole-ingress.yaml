@@ -16,7 +16,7 @@ metadata:
   namespace: default
 subsets:
 - addresses:
-  - ip: 192.168.68.3  # Replace with your Pi-hole IP
+  - ip: 192.168.68.62  # Pi-hole IP
   ports:
   - port: 80
     protocol: TCP
