@@ -1,0 +1,43 @@
+# Kaniko Build Job Template
+# This is a template - use the build-trigger service to create actual jobs
+#
+# Parameters to replace:
+#   {{APP_NAME}} - Name of the application
+#   {{GIT_URL}} - Git repository URL (http://gitea-http.gitea.svc.cluster.local:3000/...)
+#   {{GIT_BRANCH}} - Branch to build from
+#   {{IMAGE_TAG}} - Tag for the built image (default: latest or git commit sha)
+#   {{DOCKERFILE_PATH}} - Path to Dockerfile (default: ./Dockerfile)
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: build-{{APP_NAME}}-{{IMAGE_TAG}}
+  namespace: container-registry
+  labels:
+    app: build-job
+    app-name: {{APP_NAME}}
+spec:
+  ttlSecondsAfterFinished: 3600  # Auto-cleanup after 1 hour
+  template:
+    metadata:
+      labels:
+        app: build-job
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: kaniko
+        image: gcr.io/kaniko-project/executor:latest
+        args:
+        - "--dockerfile={{DOCKERFILE_PATH}}"
+        - "--context=git://{{GIT_URL}}#refs/heads/{{GIT_BRANCH}}"
+        - "--destination=registry.home.mcztest.com/{{APP_NAME}}:{{IMAGE_TAG}}"
+        - "--insecure"
+        - "--skip-tls-verify"
+        - "--cache=true"
+        - "--cache-repo=registry.home.mcztest.com/cache"
+        volumeMounts:
+        - name: docker-config
+          mountPath: /kaniko/.docker/
+      volumes:
+      - name: docker-config
+        emptyDir: {}
