@@ -21,6 +21,13 @@ data:
       period: 30
       skew: 1
 
+    webauthn:
+      disable: false
+      display_name: Homelab
+      attestation_conveyance_preference: indirect
+      user_verification: preferred
+      timeout: 60s
+
     authentication_backend:
       file:
         path: /config/users_database.yml
