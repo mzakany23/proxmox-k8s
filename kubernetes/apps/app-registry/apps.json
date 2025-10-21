@@ -19,6 +19,12 @@
       "category": "kubernetes"
     },
     {
+      "name": "Apache Superset",
+      "url": "https://superset.mcztest.com",
+      "description": "Data visualization and business intelligence platform with REST API",
+      "category": "kubernetes"
+    },
+    {
       "name": "Proxmox VE",
       "url": "https://proxmox.home.mcztest.com",
       "description": "Virtualization platform hosting 3-node k3s cluster",

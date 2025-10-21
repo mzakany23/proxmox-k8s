@@ -1,0 +1,103 @@
+# Apache Superset Helm Chart Values
+# Generated for homelab k8s cluster
+# Chart: https://github.com/apache/superset/tree/master/helm/superset
+
+# Image configuration
+image:
+  repository: apache/superset
+  tag: "4.0.2"  # Specific stable version with psycopg2 support
+  pullPolicy: IfNotPresent
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 8088
+
+# Ingress configuration for homelab
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  hosts:
+    - superset.mcztest.com
+  tls:
+    - secretName: superset-tls
+      hosts:
+        - superset.mcztest.com
+
+# Initial admin user
+initScript: |
+  #!/bin/bash
+  pip install psycopg2-binary==2.9.9
+
+bootstrapScript: |
+  #!/bin/bash
+  superset db upgrade
+  superset fab create-admin \
+    --username admin \
+    --firstname Admin \
+    --lastname User \
+    --email admin@homelab.local \
+    --password admin
+  superset init
+
+# Superset configuration
+configOverrides:
+  # Enable API access and authentication
+  enable_proxy_fix: |
+    ENABLE_PROXY_FIX = True
+    PUBLIC_ROLE_LIKE_GAMMA = True
+  secret: |
+    SECRET_KEY = 'aGM7MUkb0l0xOmGui2BMerf/pqJgsZqL7t2Sxsrf1wz6eNjKUQfBrS5u'
+  # External database connection
+  database: |
+    SQLALCHEMY_DATABASE_URI = 'postgresql://superset:superset@superset-postgres:5432/superset'
+  # External Redis connection
+  redis: |
+    REDIS_HOST = 'superset-redis'
+    REDIS_PORT = 6379
+
+# Disable bitnami subcharts (using custom deployments instead)
+postgresql:
+  enabled: false
+
+redis:
+  enabled: false
+
+# Superset node (web server) configuration
+supersetNode:
+  replicaCount: 1
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 250m
+    limits:
+      memory: 1Gi
+      cpu: 500m
+
+# Superset worker configuration
+supersetWorker:
+  replicaCount: 1
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 250m
+    limits:
+      memory: 1Gi
+      cpu: 500m
+
+# Superset beat (scheduler) configuration
+supersetCeleryBeat:
+  enabled: true
+
+# Init job configuration
+init:
+  enabled: true
+  loadExamples: false
+  command:
+    - "/bin/sh"
+    - "-c"
+    - "pip install psycopg2-binary==2.9.9 && . {{ .Values.configMountPath }}/superset_bootstrap.sh"
