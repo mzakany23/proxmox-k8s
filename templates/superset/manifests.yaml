@@ -1,0 +1,493 @@
+---
+# Source: superset/templates/secret-env.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: superset-env
+  namespace: superset
+  labels:
+    app: superset
+    chart: superset-0.15.0
+    release: "superset"
+    heritage: "Helm"
+type: Opaque
+stringData:
+    REDIS_HOST: "superset-redis-headless"
+    REDIS_USER: ""
+    REDIS_PORT: "6379"
+    REDIS_PROTO: "redis"
+    REDIS_DB: "1"
+    REDIS_CELERY_DB: "0"
+    DB_HOST: "superset-postgresql"
+    DB_PORT: "5432"
+    DB_USER: "superset"
+    DB_PASS: "superset"
+    DB_NAME: "superset"
+---
+# Source: superset/templates/secret-superset-config.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: superset-config
+  namespace: superset
+  labels:
+    app: superset
+    chart: superset-0.15.0
+    release: "superset"
+    heritage: "Helm"
+type: Opaque
+stringData:
+  superset_config.py: |
+    
+    import os
+    from flask_caching.backends.rediscache import RedisCache
+    
+    def env(key, default=None):
+        return os.getenv(key, default)
+    
+    # Redis Base URL
+    REDIS_BASE_URL=f"{env('REDIS_PROTO')}://{env('REDIS_HOST')}:{env('REDIS_PORT')}"
+    
+    # Redis URL Params
+    REDIS_URL_PARAMS = ""
+    
+    # Build Redis URLs
+    CACHE_REDIS_URL = f"{REDIS_BASE_URL}/{env('REDIS_DB', 1)}{REDIS_URL_PARAMS}"
+    CELERY_REDIS_URL = f"{REDIS_BASE_URL}/{env('REDIS_CELERY_DB', 0)}{REDIS_URL_PARAMS}"
+    
+    MAPBOX_API_KEY = env('MAPBOX_API_KEY', '')
+    CACHE_CONFIG = {
+          'CACHE_TYPE': 'RedisCache',
+          'CACHE_DEFAULT_TIMEOUT': 300,
+          'CACHE_KEY_PREFIX': 'superset_',
+          'CACHE_REDIS_URL': CACHE_REDIS_URL,
+    }
+    DATA_CACHE_CONFIG = CACHE_CONFIG
+    
+    SQLALCHEMY_DATABASE_URI = f"postgresql+psycopg2://{env('DB_USER')}:{env('DB_PASS')}@{env('DB_HOST')}:{env('DB_PORT')}/{env('DB_NAME')}"
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
+    
+    class CeleryConfig:
+      imports  = ("superset.sql_lab", )
+      broker_url = CELERY_REDIS_URL
+      result_backend = CELERY_REDIS_URL
+    
+    CELERY_CONFIG = CeleryConfig
+    RESULTS_BACKEND = RedisCache(
+          host=env('REDIS_HOST'),
+          port=env('REDIS_PORT'),
+          key_prefix='superset_results',
+    )
+    
+    
+    # Overrides
+    # database
+    SQLALCHEMY_DATABASE_URI = 'postgresql://superset:superset@superset-postgres:5432/superset'
+    
+    # enable_proxy_fix
+    ENABLE_PROXY_FIX = True
+    PUBLIC_ROLE_LIKE_GAMMA = True
+    
+    # redis
+    REDIS_HOST = 'superset-redis'
+    REDIS_PORT = 6379
+    
+    # secret
+    SECRET_KEY = 'aGM7MUkb0l0xOmGui2BMerf/pqJgsZqL7t2Sxsrf1wz6eNjKUQfBrS5u'
+    
+    
+    
+  superset_init.sh: |
+    #!/bin/sh
+    set -eu
+    echo "Upgrading DB schema..."
+    superset db upgrade
+    echo "Initializing roles..."
+    superset init
+    
+    echo "Creating admin user..."
+    superset fab create-admin \
+                    --username admin \
+                    --firstname Superset \
+                    --lastname Admin \
+                    --email admin@superset.com \
+                    --password admin \
+                    || true
+    
+    if [ -f "/app/configs/import_datasources.yaml" ]; then
+      echo "Importing database connections.... "
+      superset import_datasources -p /app/configs/import_datasources.yaml
+    fi
+  superset_bootstrap.sh: |
+    #!/bin/bash
+    superset db upgrade
+    superset fab create-admin \
+      --username admin \
+      --firstname Admin \
+      --lastname User \
+      --email admin@homelab.local \
+      --password admin
+    superset init
+---
+# Source: superset/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: superset
+  namespace: superset
+  labels:
+    app: superset
+    chart: superset-0.15.0
+    release: superset
+    heritage: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8088
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: superset
+    release: superset
+---
+# Source: superset/templates/deployment-beat.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: superset-celerybeat
+  namespace: superset
+  labels:
+    app: superset-celerybeat
+    chart: superset-0.15.0
+    release: superset
+    heritage: Helm
+spec:
+  # This must be a singleton
+  replicas: 1
+  selector:
+    matchLabels:
+      app: superset-celerybeat
+      release: superset
+  template:
+    metadata:
+      annotations:
+        checksum/superset_config.py: 9bc33d3bd19244e88e5ab4609f43ce80368b363a494fe01b3483d202d4c6743b
+        checksum/superset_bootstrap.sh: 35779d123b170aede1447e490dd5c87f54ec0c67a10688766ca74070e9ac9b11
+        checksum/connections: 2d41a2c51ec2fc809be84fc0ea0e603c946d529b4a0e43f7257e617909561a75
+        checksum/extraConfigs: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+        checksum/extraSecrets: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+        checksum/extraSecretEnv: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+        checksum/configOverrides: d89ef11284c3406fe76525b4556f8d86dbec107115fd36b6116a7dee84c331b1
+        checksum/configOverridesFiles: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+      labels:
+        app: "superset-celerybeat"
+        release: superset
+    spec:
+      securityContext:
+        runAsUser: 0
+      initContainers:
+      - command:
+        - /bin/sh
+        - -c
+        - dockerize -wait "tcp://$DB_HOST:$DB_PORT" -wait "tcp://$REDIS_HOST:$REDIS_PORT"
+          -timeout 120s
+        envFrom:
+        - secretRef:
+            name: 'superset-env'
+        image: 'apache/superset:dockerize'
+        imagePullPolicy: 'IfNotPresent'
+        name: wait-for-postgres-redis
+      containers:
+        - name: "superset-celerybeat"
+          image: "apache/superset:latest"
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh","-c",". /app/pythonpath/superset_bootstrap.sh; celery --app=superset.tasks.celery_app:app beat --pidfile /tmp/celerybeat.pid --schedule /tmp/celerybeat-schedule"]
+          env:
+            - name: "SUPERSET_PORT"
+              value: "8088"
+          envFrom:
+            - secretRef:
+                name: "superset-env"
+          volumeMounts:
+            - name: superset-config
+              mountPath: "/app/pythonpath"
+              readOnly: true
+          resources:
+            {}
+      volumes:
+        - name: superset-config
+          secret:
+            secretName: superset-config
+---
+# Source: superset/templates/deployment-worker.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: superset-worker
+  namespace: superset
+  labels:
+    app: superset-worker
+    chart: superset-0.15.0
+    release: superset
+    heritage: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: superset-worker
+      release: superset
+  template:
+    metadata:
+      annotations:
+        checksum/superset_config.py: 9bc33d3bd19244e88e5ab4609f43ce80368b363a494fe01b3483d202d4c6743b
+        checksum/superset_bootstrap.sh: 35779d123b170aede1447e490dd5c87f54ec0c67a10688766ca74070e9ac9b11
+        checksum/connections: 2d41a2c51ec2fc809be84fc0ea0e603c946d529b4a0e43f7257e617909561a75
+        checksum/extraConfigs: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+        checksum/extraSecrets: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+        checksum/extraSecretEnv: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+        checksum/configOverrides: d89ef11284c3406fe76525b4556f8d86dbec107115fd36b6116a7dee84c331b1
+        checksum/configOverridesFiles: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+      labels:
+        app: superset-worker
+        release: superset
+    spec:
+      securityContext:
+        runAsUser: 0
+      initContainers:
+      - command:
+        - /bin/sh
+        - -c
+        - dockerize -wait "tcp://$DB_HOST:$DB_PORT" -wait "tcp://$REDIS_HOST:$REDIS_PORT"
+          -timeout 120s
+        envFrom:
+        - secretRef:
+            name: 'superset-env'
+        image: 'apache/superset:dockerize'
+        imagePullPolicy: 'IfNotPresent'
+        name: wait-for-postgres-redis
+      containers:
+        - name: superset
+          image: "apache/superset:latest"
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh","-c",". /app/pythonpath/superset_bootstrap.sh; celery --app=superset.tasks.celery_app:app worker"]
+          env:
+            - name: "SUPERSET_PORT"
+              value: "8088"
+          envFrom:
+            - secretRef:
+                name: "superset-env"
+          volumeMounts:
+            - name: superset-config
+              mountPath: "/app/pythonpath"
+              readOnly: true
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - celery -A superset.tasks.celery_app:app inspect ping -d celery@$HOSTNAME
+            failureThreshold: 3
+            initialDelaySeconds: 120
+            periodSeconds: 60
+            successThreshold: 1
+            timeoutSeconds: 60
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+      volumes:
+        - name: superset-config
+          secret:
+            secretName: superset-config
+---
+# Source: superset/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: superset
+  namespace: superset
+  labels:
+    app: superset
+    chart: superset-0.15.0
+    release: superset
+    heritage: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: superset
+      release: superset
+  template:
+    metadata:
+      annotations:
+        # Force reload on config changes
+        checksum/superset_config.py: 9bc33d3bd19244e88e5ab4609f43ce80368b363a494fe01b3483d202d4c6743b
+        checksum/superset_init.sh: e6b1e8eac1f7a79a07a6c72a0e2ee6e09654eeb439c6bbe61bfd676917c41e02
+        checksum/superset_bootstrap.sh: 35779d123b170aede1447e490dd5c87f54ec0c67a10688766ca74070e9ac9b11
+        checksum/connections: 2d41a2c51ec2fc809be84fc0ea0e603c946d529b4a0e43f7257e617909561a75
+        checksum/extraConfigs: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+        checksum/extraSecrets: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+        checksum/extraSecretEnv: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+        checksum/configOverrides: d89ef11284c3406fe76525b4556f8d86dbec107115fd36b6116a7dee84c331b1
+        checksum/configOverridesFiles: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+      labels:
+        app: superset
+        release: superset
+    spec:
+      securityContext:
+        runAsUser: 0
+      initContainers:
+      - command:
+        - /bin/sh
+        - -c
+        - dockerize -wait "tcp://$DB_HOST:$DB_PORT" -timeout 120s
+        envFrom:
+        - secretRef:
+            name: 'superset-env'
+        image: 'apache/superset:dockerize'
+        imagePullPolicy: 'IfNotPresent'
+        name: wait-for-postgres
+      containers:
+        - name: superset
+          image: "apache/superset:latest"
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh","-c",". /app/pythonpath/superset_bootstrap.sh; /usr/bin/run-server.sh"]
+          env:
+            - name: "SUPERSET_PORT"
+              value: "8088"
+          envFrom:
+            - secretRef:
+                name: "superset-env"
+          volumeMounts:
+            - name: superset-config
+              mountPath: "/app/pythonpath"
+              readOnly: true
+          ports:
+            - name: http
+              containerPort: 8088
+              protocol: TCP
+          startupProbe:
+            failureThreshold: 60
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 1
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+      volumes:
+        - name: superset-config
+          secret:
+            secretName: superset-config
+---
+# Source: superset/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: superset
+  namespace: superset
+  labels:
+    app: superset
+    chart: superset-0.15.0
+    release: superset
+    heritage: Helm
+  annotations:
+    cert-manager.io/cluster-issuer: homelab-ca-issuer
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - superset.apps.homelab
+      secretName: superset-tls
+  rules:
+    - host: superset.apps.homelab
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: superset
+                port:
+                  name: http
+---
+# Source: superset/templates/init-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: superset-init-db
+  namespace: superset
+  labels:
+    app: superset
+    chart: superset-0.15.0
+    release: superset
+    heritage: Helm
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  template:
+    metadata:
+      name: superset-init-db
+    spec:
+      securityContext:
+        runAsUser: 0
+      initContainers:
+      - command:
+        - /bin/sh
+        - -c
+        - dockerize -wait "tcp://$DB_HOST:$DB_PORT" -timeout 120s
+        envFrom:
+        - secretRef:
+            name: 'superset-env'
+        image: 'apache/superset:dockerize'
+        imagePullPolicy: 'IfNotPresent'
+        name: wait-for-postgres
+      containers:
+      - name: superset-init-db
+        image: "apache/superset:latest"
+        envFrom:
+          - secretRef:
+              name: superset-env
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - name: superset-config
+            mountPath: "/app/pythonpath"
+            readOnly: true
+        command: ["/bin/sh","-c","pip install psycopg2-binary==2.9.9 \u0026\u0026 . /app/pythonpath/superset_bootstrap.sh"]
+        resources:
+          {}
+      volumes:
+        - name: superset-config
+          secret:
+            secretName: superset-config
+      restartPolicy: Never
