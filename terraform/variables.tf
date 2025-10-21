@@ -45,13 +45,8 @@ variable "control_plane_config" {
     cores  = number
     memory = number
     disk   = number
+    ip     = string
   })
-  default = {
-    name   = "k8s-control-1"
-    cores  = 2
-    memory = 4096
-    disk   = 20
-  }
 }
 
 variable "worker_nodes" {
@@ -61,21 +56,8 @@ variable "worker_nodes" {
     cores  = number
     memory = number
     disk   = number
+    ip     = string
   }))
-  default = [
-    {
-      name   = "k8s-worker-1"
-      cores  = 2
-      memory = 4096
-      disk   = 20
-    },
-    {
-      name   = "k8s-worker-2"
-      cores  = 2
-      memory = 4096
-      disk   = 20
-    }
-  ]
 }
 
 variable "network_bridge" {
