@@ -1,0 +1,34 @@
+{
+  "apps": [
+    {
+      "name": "Gitea",
+      "url": "https://gitea.home.mcztest.com",
+      "description": "Self-hosted Git service with repositories and CI/CD",
+      "category": "kubernetes"
+    },
+    {
+      "name": "ArgoCD",
+      "url": "https://argocd.home.mcztest.com",
+      "description": "GitOps continuous delivery for Kubernetes",
+      "category": "kubernetes"
+    },
+    {
+      "name": "Authelia",
+      "url": "https://auth.home.mcztest.com",
+      "description": "SSO and 2FA authentication portal",
+      "category": "kubernetes"
+    },
+    {
+      "name": "Proxmox VE",
+      "url": "https://proxmox.home.mcztest.com",
+      "description": "Virtualization platform hosting 3-node k3s cluster",
+      "category": "vm"
+    },
+    {
+      "name": "Pi-hole",
+      "url": "https://pihole.home.mcztest.com/admin",
+      "description": "Network-wide ad blocking and local DNS server",
+      "category": "vm"
+    }
+  ]
+}
