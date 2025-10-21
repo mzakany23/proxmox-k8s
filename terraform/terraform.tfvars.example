@@ -4,7 +4,37 @@ proxmox_api_url          = "https://192.168.200.2:8006/api2/json"
 proxmox_api_token_id     = "root@pam!terraform"
 proxmox_api_token_secret = "your-secret-here"
 
+# Network configuration (required for static IPs)
+network_gateway = "192.168.68.1"
+dns_servers     = ["192.168.68.1", "8.8.8.8"]
+
+# Control plane node with static IP
+control_plane_config = {
+  name   = "k8s-control-1"
+  cores  = 2
+  memory = 4096
+  disk   = 20
+  ip     = "192.168.68.50"  # Static IP for control plane
+}
+
+# Worker nodes with static IPs
+worker_nodes = [
+  {
+    name   = "k8s-worker-1"
+    cores  = 2
+    memory = 4096
+    disk   = 20
+    ip     = "192.168.68.51"  # Static IP for worker 1
+  },
+  {
+    name   = "k8s-worker-2"
+    cores  = 2
+    memory = 4096
+    disk   = 20
+    ip     = "192.168.68.52"  # Static IP for worker 2
+  }
+]
+
 # Optional overrides
 # proxmox_node         = "pve"
 # ssh_public_key_file  = "~/.ssh/id_rsa.pub"
-# network_gateway      = "192.168.200.1"

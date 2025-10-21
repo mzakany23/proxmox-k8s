@@ -50,8 +50,13 @@ resource "proxmox_virtual_environment_vm" "control_plane" {
   initialization {
     ip_config {
       ipv4 {
-        address = "dhcp"
+        address = "${var.control_plane_config.ip}/24"
+        gateway = var.network_gateway
       }
+    }
+
+    dns {
+      servers = var.dns_servers
     }
 
     user_account {
@@ -111,8 +116,13 @@ resource "proxmox_virtual_environment_vm" "workers" {
   initialization {
     ip_config {
       ipv4 {
-        address = "dhcp"
+        address = "${var.worker_nodes[count.index].ip}/24"
+        gateway = var.network_gateway
       }
+    }
+
+    dns {
+      servers = var.dns_servers
     }
 
     user_account {
