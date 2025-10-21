@@ -3,6 +3,10 @@ kind: Kustomization
 namespace: default
 resources:
   - deployment.yaml
+configMapGenerator:
+  - name: app-registry-data
+    files:
+      - apps.json
 images:
   - name: registry.home.mcztest.com/homelab/app-registry
     newTag: latest
