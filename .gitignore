@@ -53,5 +53,8 @@ conversation.env
 # Claude Code documentation (contains sensitive workflow info)
 CLAUDE.md
 
+# Recovery documentation (may contain sensitive IPs)
+RECOVERY.md
+
 # Conversation logs
 conversation/
