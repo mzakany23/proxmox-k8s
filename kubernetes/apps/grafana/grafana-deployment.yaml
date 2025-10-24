@@ -42,6 +42,8 @@ spec:
               mountPath: /etc/grafana/provisioning/dashboards
             - name: grafana-dashboards
               mountPath: /var/lib/grafana/dashboards
+            - name: grafana-dashboards-comprehensive
+              mountPath: /var/lib/grafana/dashboards/comprehensive
           resources:
             requests:
               cpu: 100m
@@ -62,3 +64,6 @@ spec:
         - name: grafana-dashboards
           configMap:
             name: grafana-dashboards
+        - name: grafana-dashboards-comprehensive
+          configMap:
+            name: grafana-dashboards-comprehensive
