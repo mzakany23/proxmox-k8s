@@ -4,7 +4,7 @@ metadata:
   name: prometheus
   namespace: monitoring
   annotations:
-    cert-manager.io/cluster-issuer: homelab-ca-issuer
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
 spec:
   ingressClassName: nginx
   tls:
