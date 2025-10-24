@@ -9,16 +9,32 @@ metadata:
 spec:
   template:
     spec:
+      initContainers:
+      - name: git-clone
+        image: alpine/git:latest
+        command:
+        - sh
+        - -c
+        - |
+          git clone http://gitea-http.gitea.svc.cluster.local:3000/homelab/homelab.git /workspace
+        volumeMounts:
+        - name: workspace
+          mountPath: /workspace
       containers:
       - name: kaniko
         image: gcr.io/kaniko-project/executor:latest
         args:
-        - "--context=http://gitea-http.gitea.svc.cluster.local:3000/homelab/homelab.git#refs/heads/main"
-        - "--context-sub-path=kubernetes/apps/app-registry"
-        - "--dockerfile=Dockerfile"
+        - "--context=dir:///workspace/kubernetes/apps/app-registry"
+        - "--dockerfile=/workspace/kubernetes/apps/app-registry/Dockerfile"
         - "--destination=registry.home.mcztest.com/homelab/app-registry:latest"
         - "--skip-tls-verify"
         - "--insecure"
         - "--skip-tls-verify-registry=registry.home.mcztest.com"
+        volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+      volumes:
+      - name: workspace
+        emptyDir: {}
       restartPolicy: Never
   backoffLimit: 1
