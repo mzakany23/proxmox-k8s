@@ -28,12 +28,13 @@ data:
       port: 0
       external_server: ""
     container:
-      network: "host"
+      network: ""
       privileged: false
-      options: ""
+      options: "-v /var/run/docker.sock:/var/run/docker.sock"
       workdir_parent: ""
-      valid_volumes: []
-      docker_host: "tcp://localhost:2375"
+      valid_volumes:
+        - /var/run/docker.sock
+      docker_host: ""
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -100,6 +101,8 @@ spec:
         volumeMounts:
         - name: docker-storage
           mountPath: /var/lib/docker
+        - name: docker-sock
+          mountPath: /var/run
         resources:
           requests:
             cpu: 100m
@@ -150,12 +153,14 @@ spec:
         - name: GITEA_RUNNER_LABELS
           value: ubuntu-latest:docker://node:20-bullseye,ubuntu-22.04:docker://node:20-bullseye
         - name: DOCKER_HOST
-          value: tcp://localhost:2375
+          value: unix:///var/run/docker.sock
         volumeMounts:
         - name: config
           mountPath: /config
         - name: runner-data
           mountPath: /data
+        - name: docker-sock
+          mountPath: /var/run
         resources:
           requests:
             cpu: 100m
@@ -170,4 +175,6 @@ spec:
       - name: runner-data
         emptyDir: {}
       - name: docker-storage
+        emptyDir: {}
+      - name: docker-sock
         emptyDir: {}
