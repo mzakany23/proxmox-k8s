@@ -11,26 +11,17 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    container:
+      image: gcr.io/kaniko-project/executor:latest
+      options: --entrypoint ""
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Docker CLI
+      - name: Build and push with Kaniko
         run: |
-          apt-get update && apt-get install -y docker.io
-
-      - name: Build and push image
-        run: |
-          # Wait for Docker daemon to be ready
-          echo "Waiting for Docker..."
-          until docker info; do sleep 1; done
-          echo "Docker is ready!"
-
-          # Build the image
-          cd kubernetes/apps/app-registry
-          docker build -t docker-registry.container-registry.svc.cluster.local:5000/homelab/app-registry:latest .
-
-          # Push to registry
-          docker push docker-registry.container-registry.svc.cluster.local:5000/homelab/app-registry:latest
+          /kaniko/executor \
+            --context=/workspace/kubernetes/apps/app-registry \
+            --dockerfile=/workspace/kubernetes/apps/app-registry/Dockerfile \
+            --destination=docker-registry.container-registry.svc.cluster.local:5000/homelab/app-registry:latest \
+            --insecure \
+            --skip-tls-verify
 
           echo "✅ Image built and pushed successfully!"
