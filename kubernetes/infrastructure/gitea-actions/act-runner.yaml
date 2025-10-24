@@ -28,12 +28,12 @@ data:
       port: 0
       external_server: ""
     container:
-      network: ""
+      network: "host"
       privileged: false
       options: ""
       workdir_parent: ""
       valid_volumes: []
-      docker_host: ""
+      docker_host: "tcp://localhost:2375"
 ---
 apiVersion: v1
 kind: ServiceAccount

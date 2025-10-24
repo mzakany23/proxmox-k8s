@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "proxmox-k8s-homelab": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/michaelzakany/projects/proxmox"
+      ]
+    }
+  }
+}
