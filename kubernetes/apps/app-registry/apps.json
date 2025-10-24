@@ -49,6 +49,12 @@
       "category": "kubernetes"
     },
     {
+      "name": "Milvus",
+      "url": "https://milvus.home.mcztest.com/webui/",
+      "description": "Vector database for AI/ML embeddings and similarity search",
+      "category": "kubernetes"
+    },
+    {
       "name": "Proxmox VE",
       "url": "https://proxmox.home.mcztest.com",
       "description": "Virtualization platform hosting 3-node k3s cluster",
