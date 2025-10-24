@@ -8,6 +8,8 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 COPY --from=builder /app/app-registry .
-RUN mkdir -p /data
+COPY --from=builder /app/apps.json /root/apps.json
+COPY --from=builder /app/entrypoint.sh /root/entrypoint.sh
+RUN mkdir -p /data && chmod +x /root/entrypoint.sh
 EXPOSE 8080
-CMD ["./app-registry"]
+CMD ["/root/entrypoint.sh"]
