@@ -1,0 +1,162 @@
+# MinIO Helm Chart Values
+# Distributed mode with 4 nodes for erasure coding (EC:2)
+# This provides high availability and data protection across your 3-node cluster
+
+## MinIO Mode
+## Distributed mode requires at least 4 drives
+mode: distributed
+
+## Statefulset replicas
+## Must be 4 or more for distributed mode
+replicas: 4
+
+## Persistence configuration
+persistence:
+  enabled: true
+  storageClass: "local-path"
+  accessMode: ReadWriteOnce
+  size: 20Gi  # 20Gi per pod = 80Gi total, usable ~40Gi with EC:2
+
+## Root credentials (change in production!)
+rootUser: minioadmin
+rootPassword: minioadmin123
+
+## Resource limits
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 250m
+  limits:
+    memory: 1Gi
+    cpu: 500m
+
+## Service configuration
+service:
+  type: ClusterIP
+  port: 9000
+
+## Console service
+consoleService:
+  type: ClusterIP
+  port: 9001
+
+## Ingress for API
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+  path: /
+  hosts:
+    - minio-api.home.mcztest.com
+  tls:
+    - secretName: minio-api-tls
+      hosts:
+        - minio-api.home.mcztest.com
+
+## Console ingress
+consoleIngress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+  path: /
+  hosts:
+    - minio.home.mcztest.com
+  tls:
+    - secretName: minio-console-tls
+      hosts:
+        - minio.home.mcztest.com
+
+## Deployment strategy
+DeploymentUpdate:
+  type: RollingUpdate
+  maxUnavailable: 1
+
+## Pod distribution across nodes
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - minio
+          topologyKey: kubernetes.io/hostname
+
+## Liveness probe
+livenessProbe:
+  httpGet:
+    path: /minio/health/live
+    port: 9000
+  initialDelaySeconds: 120
+  periodSeconds: 30
+  timeoutSeconds: 10
+  successThreshold: 1
+  failureThreshold: 3
+
+## Readiness probe
+readinessProbe:
+  httpGet:
+    path: /minio/health/ready
+    port: 9000
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 10
+  successThreshold: 1
+  failureThreshold: 3
+
+## Environment variables for future AWS S3 sync
+environment:
+  ## MinIO domain for virtual-host-style requests
+  MINIO_DOMAIN: "minio-api.home.mcztest.com"
+  ## Browser redirect URL
+  MINIO_BROWSER_REDIRECT_URL: "https://minio.home.mcztest.com"
+
+## Buckets to create automatically on startup
+buckets:
+  - name: backups
+    policy: none
+    purge: false
+  - name: static-files
+    policy: download
+    purge: false
+  - name: app-data
+    policy: none
+    purge: false
+
+## Users to create (for app-specific access keys)
+users: []
+  # - accessKey: myapp
+  #   secretKey: myappsecret
+  #   policy: readwrite
+
+## Policies to create
+policies: []
+  # - name: readonly-bucket
+  #   statements:
+  #     - resources:
+  #         - 'arn:aws:s3:::mybucket/*'
+  #       actions:
+  #         - 's3:GetObject'
+
+## Service account
+serviceAccount:
+  create: true
+  name: "minio-sa"
+
+## Security context
+securityContext:
+  enabled: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+## Network policy (optional, disabled by default)
+networkPolicy:
+  enabled: false
