@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: app-registry
-        image: docker-registry.container-registry.svc.cluster.local:5000/homelab/app-registry:latest
+        image: registry.home.mcztest.com/homelab/app-registry:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

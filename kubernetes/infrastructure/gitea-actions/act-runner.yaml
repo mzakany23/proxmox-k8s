@@ -30,10 +30,9 @@ data:
     container:
       network: ""
       privileged: false
-      options: "-v /var/run/docker.sock:/var/run/docker.sock"
+      options: ""
       workdir_parent: ""
-      valid_volumes:
-        - /var/run/docker.sock
+      valid_volumes: []
       docker_host: ""
 ---
 apiVersion: v1
@@ -91,11 +90,38 @@ spec:
     spec:
       serviceAccountName: act-runner
       containers:
+      - name: docker-dind
+        image: docker:dind
+        securityContext:
+          privileged: true
+        env:
+        - name: DOCKER_TLS_CERTDIR
+          value: ""
+        volumeMounts:
+        - name: docker-storage
+          mountPath: /var/lib/docker
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
       - name: runner
         image: gitea/act_runner:latest
         command: ["/bin/sh", "-c"]
         args:
           - |
+            echo "Waiting for Docker to be ready..."
+            for i in $(seq 1 30); do
+              if nc -z localhost 2375 >/dev/null 2>&1; then
+                echo "Docker is ready!"
+                break
+              fi
+              echo "Waiting for Docker... ($i/30)"
+              sleep 2
+            done
+
             echo "Registering runner..."
             if [ ! -f /data/.runner ]; then
               act_runner register --no-interactive \
@@ -123,6 +149,8 @@ spec:
           value: k8s-runner
         - name: GITEA_RUNNER_LABELS
           value: ubuntu-latest:docker://node:20-bullseye,ubuntu-22.04:docker://node:20-bullseye
+        - name: DOCKER_HOST
+          value: tcp://localhost:2375
         volumeMounts:
         - name: config
           mountPath: /config
@@ -140,4 +168,6 @@ spec:
         configMap:
           name: act-runner-config
       - name: runner-data
+        emptyDir: {}
+      - name: docker-storage
         emptyDir: {}

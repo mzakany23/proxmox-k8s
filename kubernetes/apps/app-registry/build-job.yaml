@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: build-app-registry
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+      - name: kaniko
+        image: gcr.io/kaniko-project/executor:latest
+        args:
+        - "--context=git://github.com/mzakany23/proxmox-k8s.git#refs/heads/main"
+        - "--context-sub-path=kubernetes/apps/app-registry"
+        - "--dockerfile=Dockerfile"
+        - "--destination=registry.home.mcztest.com/homelab/app-registry:latest"
+        - "--skip-tls-verify"
+      restartPolicy: Never
+  backoffLimit: 1
