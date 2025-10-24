@@ -296,12 +296,14 @@ Your app will be accessible at: `https://my-app.home.example.com`
 
 ### Advanced: GitOps with Gitea + ArgoCD
 
-This repository is configured with dual remotes for maximum flexibility:
+This cluster uses **ArgoCD GitOps** for automated deployment and **ArgoCD PreSync hooks** for building container images without separate CI runners.
 
-**Repository Setup:**
+#### Repository Setup
+
+**Dual Remote Configuration:**
 ```bash
 # Add Gitea as a second remote (if not already added)
-git remote add gitea https://gitea.home.example.com/homelab/proxmox-k8s.git
+git remote add gitea https://gitea:homelab123@gitea.home.example.com/gitea/homelab.git
 
 # View all remotes
 git remote -v
@@ -309,25 +311,225 @@ git remote -v
 # gitea  → Gitea (local, watched by ArgoCD)
 
 # Push to both remotes
-git push origin main
-git push gitea main
+git push origin main  # Backup to GitHub
+git push gitea main   # Deploy via ArgoCD
 ```
 
-**GitOps Workflow:**
-1. **ArgoCD watches** `kubernetes/infrastructure/` in the Gitea repo
-2. **Make infrastructure changes** locally in `kubernetes/infrastructure/`
-3. **Commit and push** to both remotes
-4. **ArgoCD auto-syncs** changes to cluster within seconds
+#### GitOps Architecture
 
-**Access Points:**
-- **Gitea**: `https://gitea.home.example.com` (homelab / homelab123)
-- **ArgoCD**: `https://argocd.home.example.com` (admin / see bootstrap output)
+**ArgoCD Applications:**
+1. **`infrastructure`** - Core cluster components (MetalLB, Ingress, cert-manager, ArgoCD)
+   - Path: `kubernetes/infrastructure/`
+   - Sync: Automated with self-heal enabled
 
-**Initial Setup:**
-1. Run `./scripts/bootstrap-gitops.sh` (installs ArgoCD and Gitea)
-2. Create `proxmox-k8s` repo in Gitea via web UI
-3. Push code: `git push gitea main`
-4. ArgoCD Application is pre-configured to watch `kubernetes/infrastructure/`
+2. **`app-registry`** - Application registry API with automated builds
+   - Path: `kubernetes/apps/app-registry/`
+   - Sync: Automated with PreSync build hook
+   - Image: Built automatically before deployment
+
+**How Deployments Work:**
+
+```
+┌─────────────┐    ┌──────────────┐    ┌──────────────────┐    ┌────────────┐
+│   Developer │───→│ git push     │───→│ ArgoCD Detects   │───→│  PreSync   │
+│   (Local)   │    │ gitea main   │    │    Changes       │    │ Build Hook │
+└─────────────┘    └──────────────┘    └──────────────────┘    └────────────┘
+                                                                      │
+                                                                      ↓
+┌─────────────┐    ┌──────────────┐    ┌──────────────────┐    ┌────────────┐
+│   Browser   │←───│ Service      │←───│ Deployment       │←───│   Kaniko   │
+│   Access    │    │ Routes       │    │  Updated         │    │ Pushes Img │
+└─────────────┘    └──────────────┘    └──────────────────┘    └────────────┘
+```
+
+#### CI/CD Without Runners
+
+**Traditional CI/CD:** Requires dedicated runners (Gitea Actions, GitHub Actions, Jenkins)
+**This Setup:** Uses ArgoCD PreSync hooks - no runners needed!
+
+**How It Works:**
+1. **Code Change** - Edit app code (e.g., `kubernetes/apps/app-registry/main.go`)
+2. **Commit & Push** - `git add . && git commit -m "Update" && git push gitea main`
+3. **ArgoCD Detects** - Polls Gitea every 3 minutes (or manual sync)
+4. **PreSync Hook Runs** - `build-job.yaml` creates Kubernetes Job
+5. **Kaniko Builds** - Builds image from Git context without Docker daemon
+6. **Image Pushed** - To `registry.home.mcztest.com/homelab/app-registry:latest`
+7. **Deployment Updates** - ArgoCD applies deployment with new image
+8. **Pods Rolling Update** - `imagePullPolicy: Always` pulls latest image
+
+**Example PreSync Hook (build-job.yaml):**
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: build-app-registry
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  template:
+    spec:
+      containers:
+      - name: kaniko
+        image: gcr.io/kaniko-project/executor:latest
+        args:
+        - "--context=git://github.com/user/repo.git#refs/heads/main"
+        - "--context-sub-path=kubernetes/apps/app-registry"
+        - "--dockerfile=Dockerfile"
+        - "--destination=registry.home.example.com/homelab/app-registry:latest"
+        - "--skip-tls-verify"
+      restartPolicy: Never
+```
+
+**Key Files for Builds:**
+- `build-job.yaml` - ArgoCD PreSync hook definition
+- `kustomization.yaml` - Must include `build-job.yaml` in resources
+- `Dockerfile` - Standard multi-stage build
+- `deployment.yaml` - Must have `imagePullPolicy: Always`
+
+**Benefits:**
+- ✅ No CI runner maintenance (no Gitea Actions, GitHub Actions, etc.)
+- ✅ No webhook configuration
+- ✅ Declarative - build configuration lives with deployment
+- ✅ Kaniko builds without Docker daemon (secure)
+- ✅ GitOps native - everything in Git
+
+#### Access Points
+
+- **Gitea**: `https://gitea.home.example.com`
+  - Web UI: homelab / homelab123
+  - Git operations: Uses basic auth, bypasses SSO
+
+- **ArgoCD**: `https://argocd.home.example.com`
+  - Username: admin
+  - Password: Retrieved with `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 --decode`
+
+#### GitOps Workflow
+
+**For Infrastructure Changes:**
+```bash
+# 1. Edit infrastructure manifests
+vim kubernetes/infrastructure/metallb/config.yaml
+
+# 2. Commit and push
+git add .
+git commit -m "Update MetalLB pool"
+git push gitea main
+git push origin main  # Optional: backup to GitHub
+
+# 3. ArgoCD auto-syncs within 3 minutes
+# Or force sync: kubectl -n argocd patch app infrastructure --type json -p='[{"op": "replace", "path": "/operation", "value": {"sync": {}}}]'
+```
+
+**For Application Changes (with build):**
+```bash
+# 1. Edit application code
+vim kubernetes/apps/app-registry/main.go
+
+# 2. Commit and push to Gitea (triggers CI/CD)
+git add .
+git commit -m "Fix API endpoint"
+git push gitea main
+
+# 3. Watch ArgoCD build and deploy
+kubectl get jobs -n default -w                    # Watch build job
+kubectl rollout status deployment/app-registry -n default
+
+# 4. Verify deployment
+curl -sk https://registry-api.home.example.com/health
+```
+
+#### Initial Setup
+
+**One-Time Configuration:**
+```bash
+# 1. Install infrastructure and ArgoCD
+./scripts/bootstrap-gitops.sh
+
+# 2. Create Gitea repository
+# Go to https://gitea.home.example.com → Create Repository
+# Name: proxmox-k8s (or your repo name)
+
+# 3. Add Gitea remote and push
+git remote add gitea https://gitea:homelab123@gitea.home.example.com/gitea/homelab.git
+git push gitea main
+
+# 4. Create ArgoCD Applications
+kubectl apply -f kubernetes/infrastructure/argocd/applications/
+
+# 5. Verify ArgoCD is watching
+kubectl get application -n argocd
+# infrastructure should show "Synced" and "Healthy"
+```
+
+#### Monitoring GitOps
+
+**Check ArgoCD Application Status:**
+```bash
+# List all applications
+kubectl get application -n argocd
+
+# View detailed status
+kubectl describe application app-registry -n argocd
+
+# Check sync history
+kubectl get application app-registry -n argocd -o jsonpath='{.status.history}'
+```
+
+**Check Build Job Execution:**
+```bash
+# Watch for build jobs
+kubectl get jobs -n default -w
+
+# View build logs
+kubectl logs -f -l job-name=build-app-registry -n default
+
+# Check build job status
+kubectl describe job build-app-registry -n default
+```
+
+**ArgoCD Web UI:**
+- Visual sync status for all applications
+- Git commit history
+- Deployment logs and events
+- Manual sync/rollback buttons
+
+#### Troubleshooting
+
+**ArgoCD Not Syncing:**
+```bash
+# Check application status
+kubectl get application -n argocd
+
+# View ArgoCD controller logs
+kubectl logs -n argocd -l app.kubernetes.io/name=argocd-application-controller --tail=50
+
+# Force manual sync
+kubectl -n argocd patch app app-registry --type=merge -p '{"operation":{"initiatedBy":{"username":"admin"},"sync":{}}}'
+```
+
+**Build Job Failing:**
+```bash
+# Check job status
+kubectl get jobs -n default
+
+# View job logs
+kubectl logs -l job-name=build-app-registry -n default
+
+# Common issues:
+# - Git repository not accessible (check URL in build-job.yaml)
+# - Dockerfile errors (check Dockerfile syntax)
+# - Registry not accessible (check registry credentials)
+```
+
+**Image Not Updating:**
+```bash
+# Ensure imagePullPolicy is Always
+kubectl get deployment app-registry -o yaml | grep imagePullPolicy
+
+# Force pod restart to pull new image
+kubectl rollout restart deployment/app-registry -n default
+```
 
 See `scripts/README.md` for automation scripts.
 
