@@ -40,6 +40,19 @@ data:
           - action: labelmap
             regex: __meta_kubernetes_node_label_(.+)
 
+      # Scrape cAdvisor (container metrics from kubelet)
+      - job_name: 'kubernetes-cadvisor'
+        kubernetes_sd_configs:
+          - role: node
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        metrics_path: /metrics/cadvisor
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+
       # Scrape Kubernetes pods
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
