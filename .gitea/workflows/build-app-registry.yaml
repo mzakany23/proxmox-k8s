@@ -12,29 +12,18 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-        env:
-          DOCKER_HOST: tcp://localhost:2375
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        env:
-          DOCKER_HOST: tcp://localhost:2375
-        with:
-          context: ./kubernetes/apps/app-registry
-          push: true
-          tags: |
-            docker-registry.container-registry.svc.cluster.local:5000/homelab/app-registry:latest
-            docker-registry.container-registry.svc.cluster.local:5000/homelab/app-registry:${{ github.sha }}
-          cache-from: type=registry,ref=docker-registry.container-registry.svc.cluster.local:5000/homelab/app-registry:buildcache
-          cache-to: type=registry,ref=docker-registry.container-registry.svc.cluster.local:5000/homelab/app-registry:buildcache,mode=max
-
-      - name: Trigger ArgoCD Sync
+      - name: Build and push image
         run: |
-          kubectl patch application app-registry -n argocd --type merge -p '{"operation":{"initiatedBy":{"username":"gitea-actions"},"sync":{}}}'
+          # Wait for Docker daemon to be ready
+          echo "Waiting for Docker..."
+          until docker info; do sleep 1; done
+          echo "Docker is ready!"
+
+          # Build the image
+          cd kubernetes/apps/app-registry
+          docker build -t docker-registry.container-registry.svc.cluster.local:5000/homelab/app-registry:latest .
+
+          # Push to registry
+          docker push docker-registry.container-registry.svc.cluster.local:5000/homelab/app-registry:latest
+
+          echo "✅ Image built and pushed successfully!"
