@@ -11,19 +11,27 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    container:
-      image: gcr.io/kaniko-project/executor:debug
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Build and push with Kaniko
         run: |
-          /kaniko/executor \
-            --context=$(pwd)/kubernetes/apps/app-registry \
-            --dockerfile=$(pwd)/kubernetes/apps/app-registry/Dockerfile \
+          # Use Kaniko via docker run since we have Docker-in-Docker
+          docker run --rm \
+            -v $(pwd):/workspace \
+            gcr.io/kaniko-project/executor:latest \
+            --context=/workspace/kubernetes/apps/app-registry \
+            --dockerfile=/workspace/kubernetes/apps/app-registry/Dockerfile \
             --destination=docker-registry.container-registry.svc.cluster.local:5000/homelab/app-registry:latest \
             --insecure \
             --skip-tls-verify
 
           echo "✅ Image built and pushed successfully!"
+
+      - name: Restart deployment
+        run: |
+          # Install kubectl
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          ./kubectl rollout restart deployment/app-registry -n default
