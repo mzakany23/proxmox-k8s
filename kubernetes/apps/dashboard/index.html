@@ -213,7 +213,8 @@
             try {
                 const response = await fetch('https://registry-api.home.mcztest.com/api/v1/apps');
                 const data = await response.json();
-                const apps = data.apps || [];
+                // API returns array directly, not wrapped in object
+                const apps = Array.isArray(data) ? data : (data.apps || []);
 
                 // Group apps by category
                 const kubernetes = apps.filter(app => app.category === 'kubernetes');
