@@ -3,6 +3,9 @@ kind: Job
 metadata:
   name: build-app-registry
   namespace: default
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
   template:
     spec:
