@@ -44,9 +44,19 @@ func (r *Registry) load() {
 		return
 	}
 
-	if err := json.Unmarshal(data, &r.apps); err != nil {
-		log.Printf("Error unmarshaling data: %v", err)
+	var wrapper struct {
+		Apps []App `json:"apps"`
 	}
+	if err := json.Unmarshal(data, &wrapper); err != nil {
+		log.Printf("Error unmarshaling data: %v", err)
+		return
+	}
+
+	// Convert array to map
+	for _, app := range wrapper.Apps {
+		r.apps[app.Name] = app
+	}
+	log.Printf("Loaded %d apps from %s", len(r.apps), r.dataFile)
 }
 
 func (r *Registry) save() error {
