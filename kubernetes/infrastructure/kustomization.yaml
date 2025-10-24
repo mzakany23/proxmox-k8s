@@ -8,5 +8,7 @@ resources:
 - sealed-secrets/sealed-secrets.yaml
 - authelia/
 - vm-proxies/
+- container-registry/
+- gitea-actions/
 - ../apps/prometheus/
 - ../apps/grafana/
