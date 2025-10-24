@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: milvus-config
+  namespace: milvus
+data:
+  milvus.yaml: |
+    # Milvus server configuration
+    etcd:
+      endpoints:
+        - etcd-0.etcd.milvus.svc.cluster.local:2379
+      rootPath: by-dev
+      metaSubPath: meta
+      kvSubPath: kv
+
+    minio:
+      address: minio.milvus.svc.cluster.local
+      port: 9000
+      accessKeyID: minioadmin
+      secretAccessKey: minioadmin
+      useSSL: false
+      bucketName: milvus-bucket
+      rootPath: file
+
+    mq:
+      type: rocksmq
+
+    messageQueue: rocksmq
+
+    rocksmq:
+      path: /var/lib/milvus/rdb_data
+      rocksmqPageSize: 2147483648
+      retentionTimeInMinutes: 4320
+      retentionSizeInMB: 8192
+      compactionInterval: 86400
+
+    rootCoord:
+      address: localhost
+      port: 53100
+      dmlChannelNum: 16
+      maxPartitionNum: 4096
+      minSegmentSizeToEnableIndex: 1024
+      enableActiveStandby: false
+
+    proxy:
+      port: 19530
+      internalPort: 19529
+      http:
+        enabled: true
+        port: 9091
+
+    queryCoord:
+      address: localhost
+      port: 19531
+      enableActiveStandby: false
+
+    queryNode:
+      port: 21123
+      enableDisk: true
+
+    indexCoord:
+      address: localhost
+      port: 31000
+      enableActiveStandby: false
+
+    indexNode:
+      port: 21121
+      enableDisk: true
+
+    dataCoord:
+      address: localhost
+      port: 13333
+      enableActiveStandby: false
+
+    dataNode:
+      port: 21124
+
+    log:
+      level: info
+      file:
+        rootPath: /var/lib/milvus/logs
+        maxSize: 300
+        maxAge: 10
+        maxBackups: 20
+
+    common:
+      storageType: minio

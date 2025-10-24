@@ -3,12 +3,12 @@
 # This provides high availability and data protection across your 3-node cluster
 
 ## MinIO Mode
-## Distributed mode requires at least 4 drives
-mode: distributed
+## Standalone mode for simpler deployment
+mode: standalone
 
 ## Statefulset replicas
-## Must be 4 or more for distributed mode
-replicas: 4
+## Standalone mode uses 1 replica
+replicas: 1
 
 ## Persistence configuration
 persistence:
