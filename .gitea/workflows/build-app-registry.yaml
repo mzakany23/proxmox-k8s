@@ -18,23 +18,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: registry.home.mcztest.com
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: ./kubernetes/apps/app-registry
           push: true
           tags: |
-            registry.home.mcztest.com/homelab/app-registry:latest
-            registry.home.mcztest.com/homelab/app-registry:${{ github.sha }}
-          cache-from: type=registry,ref=registry.home.mcztest.com/homelab/app-registry:buildcache
-          cache-to: type=registry,ref=registry.home.mcztest.com/homelab/app-registry:buildcache,mode=max
+            docker-registry.container-registry.svc.cluster.local:5000/homelab/app-registry:latest
+            docker-registry.container-registry.svc.cluster.local:5000/homelab/app-registry:${{ github.sha }}
+          cache-from: type=registry,ref=docker-registry.container-registry.svc.cluster.local:5000/homelab/app-registry:buildcache
+          cache-to: type=registry,ref=docker-registry.container-registry.svc.cluster.local:5000/homelab/app-registry:buildcache,mode=max
 
       - name: Trigger ArgoCD Sync
         run: |
