@@ -25,6 +25,30 @@
       "category": "kubernetes"
     },
     {
+      "name": "Grafana",
+      "url": "https://grafana.mcztest.com",
+      "description": "Metrics visualization and monitoring dashboards",
+      "category": "kubernetes"
+    },
+    {
+      "name": "Prometheus",
+      "url": "https://prometheus.mcztest.com",
+      "description": "Metrics collection and time-series database",
+      "category": "kubernetes"
+    },
+    {
+      "name": "MinIO Console",
+      "url": "https://minio.home.mcztest.com",
+      "description": "S3-compatible object storage web interface",
+      "category": "kubernetes"
+    },
+    {
+      "name": "MinIO API",
+      "url": "https://minio-api.home.mcztest.com",
+      "description": "S3-compatible object storage API endpoint",
+      "category": "kubernetes"
+    },
+    {
       "name": "Proxmox VE",
       "url": "https://proxmox.home.mcztest.com",
       "description": "Virtualization platform hosting 3-node k3s cluster",

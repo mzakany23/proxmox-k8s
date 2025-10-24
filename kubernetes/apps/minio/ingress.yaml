@@ -1,0 +1,52 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio-api
+  namespace: minio
+  annotations:
+    cert-manager.io/cluster-issuer: homelab-ca-issuer
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"  # Allow large file uploads
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - minio-api.home.mcztest.com
+    secretName: minio-api-tls
+  rules:
+  - host: minio-api.home.mcztest.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: minio-api
+            port:
+              number: 9000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio-console
+  namespace: minio
+  annotations:
+    cert-manager.io/cluster-issuer: homelab-ca-issuer
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - minio.home.mcztest.com
+    secretName: minio-console-tls
+  rules:
+  - host: minio.home.mcztest.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: minio-console
+            port:
+              number: 9001
