@@ -17,12 +17,9 @@ jobs:
 
       - name: Install Docker CLI
         run: |
-          curl -fsSL https://get.docker.com -o get-docker.sh
-          sh get-docker.sh
+          apt-get update && apt-get install -y docker.io
 
       - name: Build and push image
-        env:
-          DOCKER_HOST: tcp://localhost:2375
         run: |
           # Wait for Docker daemon to be ready
           echo "Waiting for Docker..."
