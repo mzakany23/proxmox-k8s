@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: milvus
+  namespace: milvus
+  labels:
+    app: milvus
+spec:
+  type: ClusterIP
+  ports:
+  - port: 19530
+    name: grpc
+    targetPort: 19530
+  - port: 9091
+    name: http
+    targetPort: 9091
+  selector:
+    app: milvus
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: milvus
+  namespace: milvus
+spec:
+  serviceName: milvus
+  replicas: 1
+  selector:
+    matchLabels:
+      app: milvus
+  template:
+    metadata:
+      labels:
+        app: milvus
+    spec:
+      nodeSelector:
+        workload: milvus
+      initContainers:
+      - name: init-minio
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for MinIO to be ready..."
+          until nc -z minio.milvus.svc.cluster.local 9000; do
+            echo "Waiting for MinIO..."
+            sleep 2
+          done
+          echo "MinIO is ready"
+      - name: init-etcd
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for etcd to be ready..."
+          until nc -z etcd-0.etcd.milvus.svc.cluster.local 2379; do
+            echo "Waiting for etcd..."
+            sleep 2
+          done
+          echo "etcd is ready"
+      containers:
+      - name: milvus
+        image: milvusdb/milvus:v2.3.3
+        args:
+        - milvus
+        - run
+        - standalone
+        env:
+        - name: ETCD_ENDPOINTS
+          value: etcd-0.etcd.milvus.svc.cluster.local:2379
+        - name: MINIO_ADDRESS
+          value: minio.milvus.svc.cluster.local:9000
+        - name: MINIO_ACCESS_KEY_ID
+          value: minioadmin
+        - name: MINIO_SECRET_ACCESS_KEY
+          value: minioadmin
+        ports:
+        - containerPort: 19530
+          name: grpc
+        - containerPort: 9091
+          name: http
+        volumeMounts:
+        - name: milvus-config
+          mountPath: /milvus/configs/milvus.yaml
+          subPath: milvus.yaml
+        - name: milvus-data
+          mountPath: /var/lib/milvus
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9091
+          initialDelaySeconds: 90
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 9091
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "1"
+          limits:
+            memory: "8Gi"
+            cpu: "2"
+      volumes:
+      - name: milvus-config
+        configMap:
+          name: milvus-config
+  volumeClaimTemplates:
+  - metadata:
+      name: milvus-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: local-path
+      resources:
+        requests:
+          storage: 20Gi
