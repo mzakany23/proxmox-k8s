@@ -14,7 +14,35 @@ When configured as an MCP server, AI assistants can:
 - Explain Let's Encrypt certificate configuration
 - Provide kubectl commands for your specific cluster setup
 
-## Quick Setup for Claude Desktop
+## Quick Setup for Claude Code (CLI)
+
+**This is already configured!** The `.mcp.json` file at the project root enables this MCP server for Claude Code.
+
+When you run `claude` in this directory or any project that wants to reference this homelab setup, the MCP server will be available.
+
+**To use in other projects:**
+1. Copy the `.mcp.json` file to the other project's root directory
+2. The MCP server will be available when running Claude Code in that project
+3. No restart needed - it's active immediately
+
+**Configuration file:** `.mcp.json`
+
+```json
+{
+  "mcpServers": {
+    "proxmox-k8s-homelab": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/michaelzakany/projects/proxmox"
+      ]
+    }
+  }
+}
+```
+
+## Quick Setup for Claude Desktop (Chat App)
 
 1. **Find your Claude Desktop config file:**
 
