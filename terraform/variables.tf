@@ -60,6 +60,17 @@ variable "worker_nodes" {
   }))
 }
 
+variable "milvus_node_config" {
+  description = "Milvus dedicated node configuration"
+  type = object({
+    name   = string
+    cores  = number
+    memory = number
+    disk   = number
+    ip     = string
+  })
+}
+
 variable "network_bridge" {
   description = "Proxmox network bridge"
   type        = string
