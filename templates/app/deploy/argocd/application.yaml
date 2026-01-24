@@ -16,7 +16,7 @@ spec:
         - values.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: REPLACE_APP_NAME
+    namespace: apps
   syncPolicy:
     automated:
       prune: true

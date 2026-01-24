@@ -51,6 +51,12 @@ data:
             - "^/.*/objects/.*$"
           policy: bypass
 
+        # Bypass Authelia for Gitea API (used by automation/CI)
+        - domain: gitea.home.mcztest.com
+          resources:
+            - "^/api/v1/.*$"
+          policy: bypass
+
         # Bypass Authelia for registry API read operations (used by dashboard)
         - domain: registry-api.home.mcztest.com
           resources:
