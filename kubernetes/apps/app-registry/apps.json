@@ -1,67 +1,81 @@
 {
   "apps": [
     {
-      "name": "Gitea",
+      "name": "gitea",
+      "namespace": "gitea",
+      "type": "application",
       "url": "https://gitea.home.mcztest.com",
       "description": "Self-hosted Git service with repositories and CI/CD",
       "category": "kubernetes"
     },
     {
-      "name": "ArgoCD",
+      "name": "argocd",
+      "namespace": "argocd",
+      "type": "gitops",
       "url": "https://argocd.home.mcztest.com",
       "description": "GitOps continuous delivery for Kubernetes",
       "category": "kubernetes"
     },
     {
-      "name": "Authelia",
+      "name": "authelia",
+      "namespace": "authelia",
+      "type": "application",
       "url": "https://auth.home.mcztest.com",
       "description": "SSO and 2FA authentication portal",
       "category": "kubernetes"
     },
     {
-      "name": "Apache Superset",
+      "name": "superset",
+      "namespace": "superset",
+      "type": "application",
       "url": "https://superset.mcztest.com",
       "description": "Data visualization and business intelligence platform with REST API",
       "category": "kubernetes"
     },
     {
-      "name": "Grafana",
+      "name": "grafana",
+      "namespace": "monitoring",
+      "type": "monitoring",
       "url": "https://grafana.mcztest.com",
       "description": "Metrics visualization and monitoring dashboards",
       "category": "kubernetes"
     },
     {
-      "name": "Prometheus",
+      "name": "prometheus",
+      "namespace": "monitoring",
+      "type": "monitoring",
       "url": "https://prometheus.mcztest.com",
       "description": "Metrics collection and time-series database",
       "category": "kubernetes"
     },
     {
-      "name": "MinIO Console",
+      "name": "minio",
+      "namespace": "minio",
+      "type": "storage",
       "url": "https://minio.home.mcztest.com",
-      "description": "S3-compatible object storage web interface",
+      "description": "S3-compatible object storage",
       "category": "kubernetes"
     },
     {
-      "name": "MinIO API",
-      "url": "https://minio-api.home.mcztest.com",
-      "description": "S3-compatible object storage API endpoint",
-      "category": "kubernetes"
-    },
-    {
-      "name": "Milvus",
+      "name": "milvus",
+      "namespace": "milvus",
+      "type": "database",
       "url": "https://milvus.home.mcztest.com/webui/",
       "description": "Vector database for AI/ML embeddings and similarity search",
       "category": "kubernetes"
     },
     {
-      "name": "Proxmox VE",
+      "name": "proxmox",
+      "namespace": "external",
+      "type": "infrastructure",
       "url": "https://proxmox.home.mcztest.com",
       "description": "Virtualization platform hosting 3-node k3s cluster",
       "category": "vm"
     },
     {
-      "name": "Pi-hole",
+      "name": "pihole",
+      "namespace": "external",
+      "type": "network",
       "url": "https://pihole.home.mcztest.com/admin",
       "description": "Network-wide ad blocking and local DNS server",
       "category": "vm"

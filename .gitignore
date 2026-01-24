@@ -35,6 +35,9 @@ kubeconfig*.yaml
 **/homelab-ca.crt
 **/homelab-ca.key
 
+# Node.js
+node_modules/
+
 # OS files
 .DS_Store
 Thumbs.db
