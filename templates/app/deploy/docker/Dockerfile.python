@@ -1,0 +1,55 @@
+# Python Multi-Stage Dockerfile
+# Replace REPLACE_PORT with your application's port (e.g., 8000)
+
+# ============================================
+# Build Stage
+# ============================================
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# ============================================
+# Runtime Stage
+# ============================================
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash appuser
+
+# Copy installed packages from builder
+COPY --from=builder /root/.local /home/appuser/.local
+
+# Ensure scripts in .local are usable
+ENV PATH=/home/appuser/.local/bin:$PATH
+
+# Copy application code
+COPY --chown=appuser:appuser . .
+
+# Switch to non-root user
+USER appuser
+
+# Expose application port
+EXPOSE REPLACE_PORT
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:REPLACE_PORT/health')" || exit 1
+
+# Run application
+# For Flask:
+# CMD ["python", "app.py"]
+# For FastAPI with uvicorn:
+# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "REPLACE_PORT"]
+# For Gunicorn:
+CMD ["gunicorn", "--bind", "0.0.0.0:REPLACE_PORT", "--workers", "2", "app:app"]

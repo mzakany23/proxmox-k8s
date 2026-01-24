@@ -1,0 +1,11 @@
+apiVersion: v2
+name: REPLACE_APP_NAME
+description: A Helm chart for deploying REPLACE_APP_NAME to Kubernetes
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - REPLACE_APP_NAME
+  - homelab
+maintainers:
+  - name: homelab

@@ -1,0 +1,73 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist
+build
+*.egg-info
+
+# Dependencies (reinstalled in container)
+node_modules
+__pycache__
+*.pyc
+.venv
+venv
+vendor
+
+# Test files
+*.test.js
+*.spec.js
+*_test.go
+*.test.ts
+*.spec.ts
+tests/
+test/
+__tests__/
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Deploy (don't need deploy files in the image)
+deploy/
+
+# Environment files (secrets)
+.env
+.env.*
+*.env
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Kubernetes/Helm
+*.yaml
+*.yml
+!docker-compose.yml
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+Jenkinsfile

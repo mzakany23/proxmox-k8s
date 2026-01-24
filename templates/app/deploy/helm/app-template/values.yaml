@@ -1,0 +1,133 @@
+# Default values for REPLACE_APP_NAME
+# This is a YAML-formatted file.
+
+# Number of replicas
+replicaCount: 1
+
+# Container image configuration
+image:
+  repository: registry.home.mcztest.com/REPLACE_APP_NAME
+  tag: "latest"
+  pullPolicy: Always
+
+# Image pull secrets (if using private registry)
+imagePullSecrets: []
+
+# Override name
+nameOverride: ""
+fullnameOverride: ""
+
+# Service account configuration
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod security context
+podSecurityContext: {}
+  # fsGroup: 2000
+
+# Container security context
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: REPLACE_PORT
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+  hosts:
+    - host: REPLACE_APP_NAME.mcztest.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: REPLACE_APP_NAME-tls
+      hosts:
+        - REPLACE_APP_NAME.mcztest.com
+
+# Resource limits
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "100m"
+  limits:
+    memory: "256Mi"
+    cpu: "200m"
+
+# Autoscaling configuration
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity rules
+affinity: {}
+
+# Environment variables
+env: []
+  # - name: DATABASE_URL
+  #   value: "postgresql://user:pass@host:5432/db"
+  # - name: SECRET_KEY
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: app-secrets
+  #       key: secret-key
+
+# Environment variables from ConfigMaps/Secrets
+envFrom: []
+  # - configMapRef:
+  #     name: app-config
+  # - secretRef:
+  #     name: app-secrets
+
+# Liveness probe
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Readiness probe
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Persistent volume configuration
+persistence:
+  enabled: false
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  mountPath: /data

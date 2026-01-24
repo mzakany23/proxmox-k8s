@@ -1,0 +1,58 @@
+# Node.js Multi-Stage Dockerfile
+# Replace REPLACE_PORT with your application's port (e.g., 3000)
+
+# ============================================
+# Build Stage
+# ============================================
+FROM node:20-alpine as builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev)
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Build application (if using TypeScript or bundler)
+# RUN npm run build
+
+# ============================================
+# Runtime Stage
+# ============================================
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Create non-root user
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -S appuser -u 1001 -G appgroup
+
+# Copy package files
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built application from builder
+# If using TypeScript/bundler:
+# COPY --from=builder /app/dist ./dist
+# If plain JavaScript:
+COPY --from=builder --chown=appuser:appgroup /app/*.js ./
+COPY --from=builder --chown=appuser:appgroup /app/src ./src
+
+# Switch to non-root user
+USER appuser
+
+# Expose application port
+EXPOSE REPLACE_PORT
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:REPLACE_PORT/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))" || exit 1
+
+# Run application
+CMD ["node", "src/index.js"]
