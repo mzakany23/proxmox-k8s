@@ -79,6 +79,30 @@
       "url": "https://pihole.home.mcztest.com/admin",
       "description": "Network-wide ad blocking and local DNS server",
       "category": "vm"
+    },
+    {
+      "name": "ubuntu-desktop",
+      "namespace": "external",
+      "type": "workstation",
+      "url": "https://desktop.mcztest.com/vnc.html?autoconnect=true",
+      "description": "Ubuntu Desktop VM with Clawdbot, Chrome, and Claude Code",
+      "category": "vm"
+    },
+    {
+      "name": "agent-progress",
+      "namespace": "agent-progress",
+      "type": "application",
+      "url": "https://agent-progress.home.mcztest.com",
+      "description": "Real-time DAG visualization for tracking concurrent Claude Code agents",
+      "category": "kubernetes"
+    },
+    {
+      "name": "conversation-history",
+      "namespace": "conversation-history",
+      "type": "database",
+      "url": null,
+      "description": "PostgreSQL with pgvector for semantic search across conversation history",
+      "category": "kubernetes"
     }
   ]
 }
