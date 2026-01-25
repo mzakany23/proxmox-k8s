@@ -1,0 +1,145 @@
+# Default values for proxmox-k8s-mcp
+# This is a YAML-formatted file.
+
+# Number of replicas
+replicaCount: 1
+
+# Container image configuration
+image:
+  repository: registry.home.mcztest.com/proxmox-k8s-mcp
+  tag: "latest"
+  pullPolicy: Always
+
+# Image pull secrets (if using private registry)
+imagePullSecrets: []
+
+# Override name
+nameOverride: ""
+fullnameOverride: ""
+
+# Service account configuration
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# RBAC configuration for kubectl access
+rbac:
+  # Create ClusterRole and ClusterRoleBinding for kubectl access
+  create: true
+  # Rules for cluster-wide read access
+  rules:
+    - apiGroups: [""]
+      resources: ["pods", "services", "endpoints", "configmaps", "secrets", "namespaces", "nodes"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: ["apps"]
+      resources: ["deployments", "statefulsets", "daemonsets", "replicasets"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: ["networking.k8s.io"]
+      resources: ["ingresses"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: ["cert-manager.io"]
+      resources: ["certificates", "certificaterequests"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: ["argoproj.io"]
+      resources: ["applications", "applicationsets"]
+      verbs: ["get", "list", "watch"]
+    # Write access for apply_manifest tool
+    - apiGroups: [""]
+      resources: ["configmaps", "secrets", "services"]
+      verbs: ["create", "update", "patch", "delete"]
+    - apiGroups: ["apps"]
+      resources: ["deployments", "statefulsets"]
+      verbs: ["create", "update", "patch", "delete"]
+    - apiGroups: ["networking.k8s.io"]
+      resources: ["ingresses"]
+      verbs: ["create", "update", "patch", "delete"]
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod security context
+podSecurityContext: {}
+
+# Container security context
+securityContext: {}
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    # Streaming requires long timeouts and no buffering
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+  hosts:
+    - host: proxmox-k8s.home.mcztest.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: proxmox-k8s-mcp-tls
+      hosts:
+        - proxmox-k8s.home.mcztest.com
+
+# Resource limits
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+# Autoscaling configuration
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity rules
+affinity: {}
+
+# MCP transport configuration
+mcp:
+  transport: "streamable-http"
+
+# Additional environment variables
+env: []
+
+# Environment variables from ConfigMaps/Secrets
+envFrom: []
+
+# Liveness probe - use TCP check since MCP is a streaming endpoint
+livenessProbe:
+  tcpSocket:
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# Readiness probe - use TCP check since MCP is a streaming endpoint
+readinessProbe:
+  tcpSocket:
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3

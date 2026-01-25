@@ -21,10 +21,17 @@
  * - services://inventory: All deployed services with status
  * - templates://catalog: Available deployment templates
  * - architecture://overview: Architecture documentation from CLAUDE.md
+ *
+ * Transport:
+ * - stdio (default): Standard I/O for local CLI usage
+ * - streamable-http: HTTP transport for K8s deployment
+ *   Set MCP_TRANSPORT=streamable-http and PORT=8000
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import express from "express";
 
 // Query tool implementations
 import { listServices, listServicesSchema } from "./tools/list-services.js";
@@ -158,12 +165,64 @@ server.resource(
 // SERVER STARTUP
 // ============================================================================
 
-async function main() {
+async function runStdioTransport() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("Proxmox K8s MCP server running on stdio");
   console.error("Query tools: list_services, get_service_info, check_health, get_capability_options, get_deployment_pattern, get_deployment_steps");
   console.error("Execution tools: apply_manifest");
+}
+
+async function runHttpTransport() {
+  const app = express();
+  app.use(express.json());
+
+  // Create HTTP transport
+  const httpTransport = new StreamableHTTPServerTransport({
+    sessionIdGenerator: undefined, // Stateless mode
+  });
+
+  // Handle MCP requests
+  app.post("/mcp", async (req, res) => {
+    try {
+      await httpTransport.handleRequest(req, res, req.body);
+    } catch (error) {
+      console.error("Error handling MCP request:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  });
+
+  // Health check endpoint
+  app.get("/health", (req, res) => {
+    res.json({ status: "healthy", transport: "streamable-http" });
+  });
+
+  // Connect server to transport
+  await server.connect(httpTransport);
+
+  const port = parseInt(process.env.PORT || "8000");
+  const host = process.env.HOST || "0.0.0.0";
+
+  app.listen(port, host, () => {
+    console.error(`Proxmox K8s MCP server running on http://${host}:${port}`);
+    console.error("MCP endpoint: POST /mcp");
+    console.error("Health check: GET /health");
+    console.error("Query tools: list_services, get_service_info, check_health, get_capability_options, get_deployment_pattern, get_deployment_steps");
+    console.error("Execution tools: apply_manifest");
+  });
+}
+
+async function main() {
+  // Select transport based on environment
+  const transport = process.env.MCP_TRANSPORT || "stdio";
+
+  if (transport === "streamable-http" || transport === "http") {
+    await runHttpTransport();
+  } else {
+    await runStdioTransport();
+  }
 }
 
 main().catch((error) => {
