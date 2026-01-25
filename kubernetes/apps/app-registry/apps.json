@@ -65,6 +65,14 @@
       "category": "kubernetes"
     },
     {
+      "name": "proxmox-k8s-mcp",
+      "namespace": "apps",
+      "type": "mcp",
+      "url": "https://proxmox-k8s.home.mcztest.com",
+      "description": "MCP server for Kubernetes cluster management and operations",
+      "category": "kubernetes"
+    },
+    {
       "name": "proxmox",
       "namespace": "external",
       "type": "infrastructure",
