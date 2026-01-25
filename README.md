@@ -20,7 +20,7 @@ Enterprise-grade 3-node Kubernetes cluster on Proxmox with k3s, Let's Encrypt HT
 - [Deploying Applications](#deploying-applications)
   - [Simple Deployment (No GitOps)](#simple-deployment-no-gitops)
   - [Advanced: GitOps with Gitea + ArgoCD](#advanced-gitops-with-gitea--argocd)
-- [AI-Assisted Deployments with MCP](#ai-assisted-deployments-with-mcp)
+- [AI-Assisted Deployment Patterns](#ai-assisted-deployment-patterns)
 - [Homelab Dashboard](#homelab-dashboard)
 - [Local Devices with HTTPS](#local-devices-with-https)
 - [User Management](#user-management)
@@ -533,49 +533,202 @@ kubectl rollout restart deployment/app-registry -n default
 
 See `scripts/README.md` for automation scripts.
 
-## AI-Assisted Deployments with MCP
+## AI-Assisted Deployment Patterns
 
-This repository can be configured as an [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server to provide AI assistants with full context about your cluster setup, deployment workflows, and infrastructure configuration.
+This repository implements a three-layer architecture for AI-assisted infrastructure management using [MCP (Model Context Protocol)](https://modelcontextprotocol.io), skills, and specialized subagents. Each layer serves a distinct purpose and they work together for complex deployments.
 
-### Quick Setup
+### Architecture Overview
 
-1. **Configure MCP Server** (see `MCP_SETUP.md` for full instructions):
-   ```json
-   {
-     "mcpServers": {
-       "proxmox-k8s-homelab": {
-         "command": "npx",
-         "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/proxmox"]
-       }
-     }
-   }
-   ```
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         User Request                             │
+│            "Deploy a new Python API to the cluster"             │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  SKILLS (Workflow Orchestration)                                │
+│  ────────────────────────────────────────────────────────────── │
+│  /feature, /commit, /add-app-proxmox, /build-image              │
+│  Repeatable multi-step procedures invoked by users              │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  SUBAGENTS (Specialized Execution)                              │
+│  ────────────────────────────────────────────────────────────── │
+│  infra-researcher → infra-planner → infra-executor → validator  │
+│  Autonomous agents with focused context and tools               │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  MCP SERVERS (Capabilities)                                     │
+│  ────────────────────────────────────────────────────────────── │
+│  proxmox-k8s        → K8s operations (list_services, deploy)    │
+│  proxmox-k8s-homelab → Filesystem access (read, write, search)  │
+│  monarch-money      → Financial queries (optional)              │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-2. **Ask AI for Help** - Once configured, you can get deployment assistance:
-   ```
-   @proxmox-k8s: Help me deploy a React app with HTTPS to the cluster
+### Layer 1: MCP Servers (Capabilities)
 
-   @proxmox-k8s: Show me how to troubleshoot ArgoCD sync failures
+MCP servers expose tools that Claude and subagents can call. Each server has a single, well-defined purpose.
 
-   @proxmox-k8s: Walk me through the GitOps workflow for infrastructure changes
+**Registered MCP Servers:**
 
-   @proxmox-k8s: What's the command to check certificate status?
-   ```
+| Server | Purpose | Example Tools |
+|--------|---------|---------------|
+| `proxmox-k8s` | Kubernetes infrastructure | `list_services`, `check_health`, `get_deployment_pattern` |
+| `proxmox-k8s-homelab` | Filesystem operations | `read_file`, `write_file`, `search_files` |
+| `monarch-money` | Financial data (optional) | `get_accounts`, `get_transactions` |
 
-The AI will have access to:
-- All deployment scripts and templates
-- Infrastructure manifests (MetalLB, Ingress, cert-manager, ArgoCD)
-- Network configuration and cluster architecture
-- GitOps workflow documentation
-- Troubleshooting guides
+**Setup (Global Registration):**
+```bash
+# Register MCP servers globally (available in any project)
+claude mcp add --scope user --transport stdio proxmox-k8s -- \
+  node /path/to/proxmox/mcp-server/dist/index.js
 
-**Benefits:**
-- Get step-by-step deployment instructions tailored to your setup
-- Troubleshoot issues with full cluster context
-- Learn commands and workflows interactively
-- Generate custom Kubernetes manifests following your templates
+claude mcp add --scope user --transport stdio proxmox-k8s-homelab -- \
+  npx -y @modelcontextprotocol/server-filesystem /path/to/proxmox
 
-See `MCP_SETUP.md` for detailed configuration instructions.
+# Verify registration
+claude mcp list
+```
+
+**Direct Tool Usage:**
+```
+# Check cluster health
+What services are running in the cluster?
+→ Claude calls: mcp__proxmox-k8s__list_services
+
+# Get deployment pattern
+How should I deploy a Python API?
+→ Claude calls: mcp__proxmox-k8s__get_deployment_pattern
+```
+
+### Layer 2: Subagents (Specialized Execution)
+
+Subagents are autonomous agents spawned for complex tasks. They have access to MCP tools and focused context.
+
+**Available Subagents:**
+
+| Subagent | Purpose | When to Use |
+|----------|---------|-------------|
+| `infra-researcher` | Explore cluster state | "What's deployed?", "Do we have Redis?" |
+| `infra-planner` | Design deployment plans | Multi-step deployments, architecture decisions |
+| `infra-executor` | Execute approved plans | Apply manifests, run deployments |
+| `infra-validator` | Verify deployments | Health checks, DNS verification |
+| `git-manager` | Git operations | Commits, branches, PRs |
+| `mcp-developer` | Build MCP servers | Create new integrations |
+
+**Example Flow:**
+```
+User: "Deploy a new monitoring dashboard"
+
+1. infra-researcher  → Checks existing monitoring stack
+2. infra-planner     → Creates deployment plan with steps
+3. [User approves]
+4. infra-executor    → Applies Helm chart and manifests
+5. infra-validator   → Verifies pods, ingress, certificates
+```
+
+### Layer 3: Skills (Workflow Orchestration)
+
+Skills are prompt templates that orchestrate multi-step workflows. Users invoke them with `/skill-name`.
+
+**Available Skills:**
+
+| Skill | Purpose | Example |
+|-------|---------|---------|
+| `/feature` | Phased development workflow | `/feature add user authentication` |
+| `/commit` | Smart git commits | `/commit` (analyzes changes, writes message) |
+| `/add-app-proxmox` | Full app deployment | `/add-app-proxmox my-api` |
+| `/build-image` | Container builds with Kaniko | `/build-image my-app` |
+| `/checkpoint` | Save progress snapshot | `/checkpoint` |
+
+**Skills vs Direct Commands:**
+```
+# Direct (one-off):
+"Check the health of the grafana service"
+
+# Skill (repeatable workflow):
+/add-app-proxmox my-new-api
+→ Creates Gitea repo
+→ Generates Helm chart from template
+→ Creates ArgoCD Application
+→ Adds DNS entry
+→ Validates deployment
+```
+
+### When to Use Each Layer
+
+| Scenario | Recommended Approach |
+|----------|---------------------|
+| Quick status check | Direct MCP tool call |
+| One-off file read | Direct MCP tool call |
+| Explore codebase | Subagent (infra-researcher) |
+| Plan complex deployment | Subagent (infra-planner) |
+| Repeatable workflow | Skill (/add-app-proxmox) |
+| Git operations | Subagent (git-manager) or Skill (/commit) |
+
+### Practical Examples
+
+**Example 1: Check Cluster Status**
+```
+User: "What's running in the cluster?"
+Claude: [Calls mcp__proxmox-k8s__list_services]
+→ Returns list of services with health status
+```
+
+**Example 2: Deploy New Application**
+```
+User: /add-app-proxmox my-python-api
+
+Skill orchestrates:
+1. Spawns infra-researcher to check existing patterns
+2. Uses MCP tools to create Gitea repo
+3. Generates Helm chart from template
+4. Creates ArgoCD Application
+5. Spawns infra-validator to verify deployment
+```
+
+**Example 3: Troubleshoot Failing Pod**
+```
+User: "The grafana pod keeps crashing"
+
+Claude spawns infra-researcher:
+1. Calls mcp__proxmox-k8s__check_health for grafana
+2. Reads pod logs via kubectl
+3. Checks resource limits
+4. Returns diagnosis and fix
+```
+
+### Configuration Files
+
+**MCP Server Registration:** `~/.claude.json`
+```json
+{
+  "mcpServers": {
+    "proxmox-k8s": {
+      "command": "node",
+      "args": ["/path/to/mcp-server/dist/index.js"]
+    }
+  }
+}
+```
+
+**Skills Location:** `~/.claude/commands/*.md`
+
+**Subagents Location:** `~/.claude/agents/*.md`
+
+### Benefits
+
+- **Composable**: Mix and match layers based on task complexity
+- **Focused**: Each layer has clear responsibility (capabilities → execution → orchestration)
+- **Auditable**: MCP provides standardized, traceable tool calls
+- **Extensible**: Add new MCP servers, skills, or subagents as needed
+- **Efficient**: Direct tool calls for simple tasks, full orchestration for complex ones
 
 ## Homelab Dashboard
 
