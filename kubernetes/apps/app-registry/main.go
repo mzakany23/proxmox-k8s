@@ -14,6 +14,8 @@ import (
 
 type App struct {
 	Name        string    `json:"name"`
+	Namespace   string    `json:"namespace,omitempty"`
+	Type        string    `json:"type,omitempty"`
 	URL         string    `json:"url"`
 	Description string    `json:"description"`
 	Category    string    `json:"category"`
