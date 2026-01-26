@@ -111,6 +111,14 @@
       "url": null,
       "description": "PostgreSQL with pgvector for semantic search across conversation history",
       "category": "kubernetes"
+    },
+    {
+      "name": "homeassistant",
+      "namespace": "external",
+      "type": "automation",
+      "url": "http://192.168.68.134:8123",
+      "description": "Home automation platform",
+      "category": "vm"
     }
   ]
 }
