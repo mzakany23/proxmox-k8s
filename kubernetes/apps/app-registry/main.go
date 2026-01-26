@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"sync"
 	"time"
 
@@ -63,7 +64,21 @@ func (r *Registry) save() error {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	data, err := json.MarshalIndent(r.apps, "", "  ")
+	// Convert map to sorted slice for consistent output
+	apps := make([]App, 0, len(r.apps))
+	for _, app := range r.apps {
+		apps = append(apps, app)
+	}
+	sort.Slice(apps, func(i, j int) bool {
+		return apps[i].Name < apps[j].Name
+	})
+
+	// Wrap in struct to match load() format
+	wrapper := struct {
+		Apps []App `json:"apps"`
+	}{Apps: apps}
+
+	data, err := json.MarshalIndent(wrapper, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -79,6 +94,11 @@ func (r *Registry) ListApps(w http.ResponseWriter, req *http.Request) {
 	for _, app := range r.apps {
 		apps = append(apps, app)
 	}
+
+	// Sort alphabetically by name for consistent ordering
+	sort.Slice(apps, func(i, j int) bool {
+		return apps[i].Name < apps[j].Name
+	})
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(apps)

@@ -116,9 +116,41 @@
       "name": "homeassistant",
       "namespace": "external",
       "type": "automation",
-      "url": "http://192.168.68.134:8123",
+      "url": "https://homeassistant.home.mcztest.com",
       "description": "Home automation platform",
       "category": "vm"
+    },
+    {
+      "name": "agent-progress-mcp",
+      "namespace": "apps",
+      "type": "mcp",
+      "url": "https://agent-progress-mcp.home.mcztest.com",
+      "description": "MCP server for agent progress tracking and workflow management",
+      "category": "kubernetes"
+    },
+    {
+      "name": "conversation-history-mcp",
+      "namespace": "conversation-history",
+      "type": "mcp",
+      "url": "https://conversation-history.home.mcztest.com",
+      "description": "MCP server for semantic search across Claude Code conversation history",
+      "category": "kubernetes"
+    },
+    {
+      "name": "monarch-money-mcp",
+      "namespace": "apps",
+      "type": "mcp",
+      "url": "https://monarch-money.home.mcztest.com",
+      "description": "MCP server for Monarch Money financial data access",
+      "category": "kubernetes"
+    },
+    {
+      "name": "perfin-analysis-mcp",
+      "namespace": "apps",
+      "type": "mcp",
+      "url": "https://perfin-analysis.home.mcztest.com",
+      "description": "MCP server for personal finance analysis and budget modeling",
+      "category": "kubernetes"
     }
   ]
 }
