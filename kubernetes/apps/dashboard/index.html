@@ -103,7 +103,7 @@
         .badge {
             display: inline-block;
             padding: 0.25rem 0.75rem;
-            background: #48bb78;
+            background: #718096;
             color: white;
             border-radius: 12px;
             font-size: 0.75rem;
@@ -111,12 +111,44 @@
             margin-top: 0.5rem;
         }
 
-        .badge.infrastructure {
+        .badge.mcp {
+            background: #9f7aea;
+        }
+
+        .badge.application {
             background: #4299e1;
         }
 
-        .badge.device {
+        .badge.database {
+            background: #48bb78;
+        }
+
+        .badge.monitoring {
             background: #ed8936;
+        }
+
+        .badge.gitops {
+            background: #667eea;
+        }
+
+        .badge.storage {
+            background: #38b2ac;
+        }
+
+        .badge.infrastructure {
+            background: #e53e3e;
+        }
+
+        .badge.network {
+            background: #d69e2e;
+        }
+
+        .badge.automation {
+            background: #dd6b20;
+        }
+
+        .badge.workstation {
+            background: #805ad5;
         }
 
         .footer {
@@ -220,6 +252,21 @@
                 const kubernetes = apps.filter(app => app.category === 'kubernetes');
                 const vm = apps.filter(app => app.category === 'vm');
 
+                // Helper to render app card
+                const renderCard = (app) => {
+                    const type = app.type || 'application';
+                    const url = app.url || '#';
+                    const urlDisplay = url.replace('https://', '').replace('http://', '');
+                    return `
+                        <a href="${url}" class="service-card" target="_blank">
+                            <div class="service-name">${app.name}</div>
+                            <div class="service-url">${urlDisplay}</div>
+                            <div class="service-description">${app.description || 'No description'}</div>
+                            <span class="badge ${type}">${type}</span>
+                        </a>
+                    `;
+                };
+
                 // Render Kubernetes
                 if (kubernetes.length === 0) {
                     kubernetesGrid.innerHTML = `
@@ -228,14 +275,7 @@
                         </div>
                     `;
                 } else {
-                    kubernetesGrid.innerHTML = kubernetes.map(app => `
-                        <a href="${app.url}" class="service-card" target="_blank">
-                            <div class="service-name">${app.name}</div>
-                            <div class="service-url">${app.url.replace('https://', '').replace('http://', '')}</div>
-                            <div class="service-description">${app.description || 'No description'}</div>
-                            <span class="badge infrastructure">${app.category}</span>
-                        </a>
-                    `).join('');
+                    kubernetesGrid.innerHTML = kubernetes.map(renderCard).join('');
                 }
 
                 // Render VM
@@ -246,14 +286,7 @@
                         </div>
                     `;
                 } else {
-                    vmGrid.innerHTML = vm.map(app => `
-                        <a href="${app.url}" class="service-card" target="_blank">
-                            <div class="service-name">${app.name}</div>
-                            <div class="service-url">${app.url.replace('https://', '').replace('http://', '')}</div>
-                            <div class="service-description">${app.description || 'No description'}</div>
-                            <span class="badge device">${app.category}</span>
-                        </a>
-                    `).join('');
+                    vmGrid.innerHTML = vm.map(renderCard).join('');
                 }
             } catch (error) {
                 console.error('Failed to load applications:', error);
