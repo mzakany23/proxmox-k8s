@@ -92,8 +92,8 @@
       "name": "ubuntu-desktop",
       "namespace": "external",
       "type": "workstation",
-      "url": "https://desktop.mcztest.com/vnc.html?autoconnect=true",
-      "description": "Ubuntu Desktop VM with Clawdbot, Chrome, and Claude Code",
+      "url": "https://desktop.home.mcztest.com/vnc.html?autoconnect=true",
+      "description": "Ubuntu Desktop VM with Clawdbot, Chrome, and Claude Code (OTP protected)",
       "category": "vm"
     },
     {
