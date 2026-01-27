@@ -45,16 +45,6 @@ metadata:
   namespace: default
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare
-    nginx.ingress.kubernetes.io/auth-url: "http://authelia.authelia.svc.cluster.local/api/verify"
-    nginx.ingress.kubernetes.io/auth-signin: "https://auth.home.mcztest.com/?rd=$scheme://$http_host$request_uri"
-    nginx.ingress.kubernetes.io/auth-response-headers: Remote-User,Remote-Name,Remote-Groups,Remote-Email
-    nginx.ingress.kubernetes.io/auth-snippet: |
-      proxy_set_header X-Forwarded-Method $request_method;
-      proxy_set_header X-Forwarded-Proto $scheme;
-      proxy_set_header X-Forwarded-Host $http_host;
-      proxy_set_header X-Forwarded-URI $request_uri;
-      proxy_set_header X-Forwarded-For $remote_addr;
-      proxy_set_header X-Real-IP $remote_addr;
 spec:
   ingressClassName: nginx
   tls:

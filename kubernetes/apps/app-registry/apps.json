@@ -17,14 +17,6 @@
       "category": "kubernetes"
     },
     {
-      "name": "authelia",
-      "namespace": "authelia",
-      "type": "application",
-      "url": "https://auth.home.mcztest.com",
-      "description": "SSO and 2FA authentication portal",
-      "category": "kubernetes"
-    },
-    {
       "name": "superset",
       "namespace": "superset",
       "type": "application",
@@ -93,7 +85,7 @@
       "namespace": "external",
       "type": "workstation",
       "url": "https://desktop.home.mcztest.com/vnc.html?autoconnect=true",
-      "description": "Ubuntu Desktop VM with Clawdbot, Chrome, and Claude Code (OTP protected)",
+      "description": "Ubuntu Desktop VM with Clawdbot, Chrome, and Claude Code",
       "category": "vm"
     },
     {
