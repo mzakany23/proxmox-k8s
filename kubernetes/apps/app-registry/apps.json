@@ -143,6 +143,14 @@
       "url": "https://perfin-analysis.home.mcztest.com",
       "description": "MCP server for personal finance analysis and budget modeling",
       "category": "kubernetes"
+    },
+    {
+      "name": "ncsoccer-mcp",
+      "namespace": "apps",
+      "type": "mcp",
+      "url": "https://ncsoccer-mcp.home.mcztest.com",
+      "description": "MCP server for NC Soccer Key West FC game tracking, predictions, and semantic search",
+      "category": "kubernetes"
     }
   ]
 }
