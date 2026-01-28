@@ -29,6 +29,7 @@ spec:
           lightTheme: gazette
           darkTheme: tron
           showGreeting: false
+          showSearch: false
           showAppGroups: true
           showAppUrls: false
           showAppInfo: true
