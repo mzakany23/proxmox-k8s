@@ -1,0 +1,24 @@
+# Individual ArgoCD Application for dashboard
+# Uses Kustomize (has ConfigMap from index.html) instead of shared Helm chart
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dashboard
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    homelab.mcztest.com/type: app
+    homelab.mcztest.com/managed-by: individual
+spec:
+  project: default
+  source:
+    repoURL: http://gitea-http.gitea:3000/homelab/proxmox.git
+    targetRevision: HEAD
+    path: deploy/kubernetes/individual/dashboard
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

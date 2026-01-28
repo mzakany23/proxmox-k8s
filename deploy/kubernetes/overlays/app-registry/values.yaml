@@ -1,0 +1,47 @@
+# Values for app-registry
+# NOTE: This app stays in 'default' namespace (has existing PVC data)
+# Managed by individual ArgoCD Application, not ApplicationSet
+
+image:
+  repository: registry.home.mcztest.com/homelab/app-registry
+  tag: latest
+  pullPolicy: Always
+
+service:
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  host: registry-api.home.mcztest.com
+
+persistence:
+  enabled: true
+  size: 1Gi
+  mountPath: /data
+  storageClass: local-path
+
+env:
+  - name: DATA_FILE
+    value: "/data/apps.json"
+
+healthCheck:
+  enabled: true
+  http:
+    enabled: true
+    path: /health
+    port: http
+  liveness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  readiness:
+    initialDelaySeconds: 3
+    periodSeconds: 5
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi

@@ -1,6 +1,7 @@
 # ArgoCD ApplicationSet for homelab apps
 # Auto-discovers apps from deploy/kubernetes/overlays/
 # Uses shared Helm chart with per-app values
+# Apps needing special namespaces are excluded (managed individually)
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -13,6 +14,11 @@ spec:
         revision: HEAD
         directories:
           - path: deploy/kubernetes/overlays/*
+          # Exclude apps managed by individual Applications (different namespace)
+          - path: deploy/kubernetes/overlays/app-registry
+            exclude: true
+          - path: deploy/kubernetes/overlays/dashboard
+            exclude: true
   template:
     metadata:
       name: '{{path.basename}}'
