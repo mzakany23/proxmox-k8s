@@ -1,0 +1,27 @@
+# ArgoCD Application for cluster infrastructure
+# Manages: MetalLB, cert-manager, ingress-nginx, monitoring, etc.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infrastructure
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    homelab.mcztest.com/type: infrastructure
+spec:
+  project: default
+  source:
+    repoURL: http://gitea-http.gitea:3000/homelab/proxmox.git
+    targetRevision: HEAD
+    path: kubernetes/infrastructure
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # ServerSideApply helps with CRD drift (like bgppeers.metallb.io)
+      - ServerSideApply=true

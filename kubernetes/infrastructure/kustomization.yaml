@@ -9,5 +9,5 @@ resources:
 - vm-proxies/
 - container-registry/
 - gitea-actions/
-- ../apps/prometheus/
-- ../apps/grafana/
+- ../../deploy/kubernetes/infrastructure-apps/prometheus/
+- ../../deploy/kubernetes/infrastructure-apps/grafana/
