@@ -20,7 +20,7 @@ service:
 
 ingress:
   enabled: true
-  host: perfin-analysis-mcp.home.mcztest.com
+  host: perfin-analysis.home.mcztest.com
 
 mcp:
   enabled: true

@@ -20,7 +20,7 @@ service:
 
 ingress:
   enabled: true
-  host: ncsoccer-mcp.home.mcztest.com
+  host: ncsoccer.home.mcztest.com
 
 mcp:
   enabled: true

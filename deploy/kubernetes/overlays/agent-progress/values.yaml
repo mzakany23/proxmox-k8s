@@ -20,7 +20,7 @@ service:
 
 ingress:
   enabled: true
-  host: agent-progress-mcp.home.mcztest.com
+  host: agent-progress.home.mcztest.com
 
 mcp:
   enabled: true
