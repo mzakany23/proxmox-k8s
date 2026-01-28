@@ -1,0 +1,25 @@
+# ArgoCD Application for conversation-history PostgreSQL
+# Deploys pgvector-enabled PostgreSQL for conversation history storage
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: conversation-history-postgres
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    homelab.mcztest.com/type: database
+spec:
+  project: default
+  source:
+    repoURL: http://gitea-http.gitea:3000/homelab/proxmox.git
+    targetRevision: HEAD
+    path: deploy/kubernetes/individual/conversation-history-postgres
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
