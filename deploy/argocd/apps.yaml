@@ -1,0 +1,40 @@
+# ArgoCD ApplicationSet for homelab apps
+# Auto-discovers apps from deploy/kubernetes/overlays/
+# Uses shared Helm chart with per-app values
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: homelab-apps
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        repoURL: http://gitea-http.gitea:3000/homelab/proxmox.git
+        revision: HEAD
+        directories:
+          - path: deploy/kubernetes/overlays/*
+  template:
+    metadata:
+      name: '{{path.basename}}'
+      labels:
+        app.kubernetes.io/managed-by: argocd
+        homelab.mcztest.com/type: app
+    spec:
+      project: default
+      source:
+        repoURL: http://gitea-http.gitea:3000/homelab/proxmox.git
+        targetRevision: HEAD
+        path: deploy/helm/homelab-app
+        helm:
+          releaseName: '{{path.basename}}'
+          valueFiles:
+            - ../../kubernetes/overlays/{{path.basename}}/values.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: apps
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

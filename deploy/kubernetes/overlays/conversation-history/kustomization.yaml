@@ -1,0 +1,14 @@
+# Kustomization for conversation-history
+# Note: ArgoCD uses the shared Helm chart directly with this values.yaml
+# This kustomization is for local testing only
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: apps
+
+# For ArgoCD, the chart is rendered from deploy/helm/homelab-app
+# with this values.yaml referenced in the ApplicationSet
+
+# For local testing, generate manifests with (from repo root):
+#   helm template conversation-history ./deploy/helm/homelab-app -f ./deploy/kubernetes/overlays/conversation-history/values.yaml -n apps

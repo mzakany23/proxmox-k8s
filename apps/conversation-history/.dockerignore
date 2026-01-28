@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info
+.eggs
+dist
+build
+
+# Virtual environments
+.venv
+venv
+env
+
+# IDE
+.idea
+.vscode
+*.swp
+
+# Local config
+.env
+.env.local
+
+# Tests
+tests/
+.pytest_cache
+
+# K8s manifests (not needed in image)
+k8s/
+
+# Documentation (keep README.md for pyproject.toml)
+docs/
+CHANGELOG.md
+CONTRIBUTING.md
+
+# MCP config
+.mcp.json
