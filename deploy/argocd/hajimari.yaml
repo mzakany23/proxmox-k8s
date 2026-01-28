@@ -1,0 +1,102 @@
+# ArgoCD Application for Hajimari dashboard
+# Uses external Hajimari Helm chart (not the shared homelab-app chart)
+# Replaces app-registry and dashboard
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hajimari
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    homelab.mcztest.com/type: dashboard
+    homelab.mcztest.com/managed-by: individual
+spec:
+  project: default
+  source:
+    repoURL: https://hajimari.io
+    targetRevision: 2.0.2
+    chart: hajimari
+    helm:
+      releaseName: hajimari
+      valueFiles: []
+      values: |
+        image:
+          repository: ghcr.io/toboshii/hajimari
+          tag: v0.3.1
+
+        hajimari:
+          title: "Homelab"
+          lightTheme: gazette
+          darkTheme: tron
+          showGreeting: false
+          showAppGroups: true
+          showAppUrls: false
+          showAppInfo: true
+          showAppStatus: true
+          defaultEnable: true
+
+          namespaceSelector:
+            any: true
+
+          customApps:
+            - group: VMs
+              apps:
+                - name: Proxmox
+                  url: https://proxmox.home.mcztest.com
+                  icon: simple-icons:proxmox
+                - name: Pi-hole
+                  url: https://pihole.home.mcztest.com/admin
+                  icon: simple-icons:pihole
+                - name: Home Assistant
+                  url: https://homeassistant.home.mcztest.com
+                  icon: simple-icons:homeassistant
+                - name: Ubuntu Desktop
+                  url: https://desktop.home.mcztest.com/vnc.html?autoconnect=true
+                  icon: simple-icons:ubuntu
+
+          globalBookmarks:
+            - group: Quick Links
+              bookmarks:
+                - name: GitHub
+                  url: https://github.com/mzakany23/proxmox-k8s
+                - name: ArgoCD
+                  url: https://argocd.home.mcztest.com
+                - name: Gitea
+                  url: https://gitea.home.mcztest.com
+
+        ingress:
+          main:
+            enabled: true
+            ingressClassName: nginx
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+            hosts:
+              - host: home.mcztest.com
+                paths:
+                  - path: /
+                    pathType: Prefix
+            tls:
+              - secretName: hajimari-tls
+                hosts:
+                  - home.mcztest.com
+
+        persistence:
+          data:
+            enabled: false
+
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

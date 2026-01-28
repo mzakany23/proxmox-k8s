@@ -1,6 +1,14 @@
 # Values for perfin-analysis (perfin-analysis-mcp)
 # Using existing perfin-analysis-mcp image
 
+# Hajimari dashboard integration
+hajimari:
+  enabled: true
+  icon: "mdi:chart-line"
+  appName: "Perfin Analysis"
+  group: "MCP Servers"
+  info: "Budget modeling and spending analysis"
+
 image:
   repository: registry.home.mcztest.com/perfin-analysis-mcp
   tag: latest

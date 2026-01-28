@@ -55,6 +55,16 @@ mcp:
     nginx.ingress.kubernetes.io/proxy-buffering: "off"
     nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
 
+# Hajimari dashboard integration (opt-in)
+# Adds annotations for auto-discovery by Hajimari dashboard
+hajimari:
+  enabled: false
+  icon: ""       # e.g., "mdi:api", "simple-icons:kubernetes"
+  appName: ""    # Display name (defaults to release name)
+  group: ""      # Group name for organization (e.g., "MCP Servers", "Monitoring")
+  info: ""       # Optional description
+  url: ""        # Override URL (defaults to ingress URL)
+
 # PostgreSQL configuration (opt-in)
 postgres:
   enabled: false

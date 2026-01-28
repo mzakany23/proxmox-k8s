@@ -14,11 +14,9 @@ spec:
         revision: HEAD
         directories:
           - path: deploy/kubernetes/overlays/*
-          # Exclude apps managed by individual Applications (different namespace)
-          - path: deploy/kubernetes/overlays/app-registry
-            exclude: true
-          - path: deploy/kubernetes/overlays/dashboard
-            exclude: true
+          # Exclude apps managed by individual Applications (different chart or namespace)
+          - path: deploy/kubernetes/overlays/hajimari
+            exclude: true  # Uses external hajimari Helm chart, not homelab-app
   template:
     metadata:
       name: '{{path.basename}}'

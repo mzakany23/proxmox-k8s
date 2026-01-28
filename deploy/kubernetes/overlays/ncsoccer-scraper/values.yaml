@@ -1,6 +1,14 @@
 # Values for ncsoccer-scraper (ncsoccer-mcp)
 # Using existing ncsoccer-mcp image
 
+# Hajimari dashboard integration
+hajimari:
+  enabled: true
+  icon: "mdi:soccer"
+  appName: "NC Soccer"
+  group: "MCP Servers"
+  info: "Soccer predictions and standings"
+
 image:
   repository: registry.home.mcztest.com/ncsoccer-mcp
   tag: latest

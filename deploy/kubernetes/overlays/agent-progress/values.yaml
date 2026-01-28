@@ -1,6 +1,14 @@
 # Values for agent-progress (agent-progress-mcp)
 # Using existing agent-progress-mcp image
 
+# Hajimari dashboard integration
+hajimari:
+  enabled: true
+  icon: "mdi:robot"
+  appName: "Agent Progress"
+  group: "MCP Servers"
+  info: "Workflow tracking for AI agents"
+
 image:
   repository: registry.home.mcztest.com/agent-progress-mcp
   tag: latest
