@@ -27,12 +27,12 @@ healthCheck:
     enabled: true
     port: http
 
-# External PostgreSQL (already deployed separately)
+# PostgreSQL in apps namespace (consolidated)
 postgres:
   enabled: true
   external:
     enabled: true
-    host: postgres.conversation-history.svc.cluster.local
+    host: conversation-history-postgres.apps.svc.cluster.local
     port: 5432
     database: conversation_history
     user: convo_user
