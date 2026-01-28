@@ -33,37 +33,82 @@ spec:
           showAppGroups: true
           showAppUrls: false
           showAppInfo: true
-          showAppStatus: true
-          defaultEnable: true
+          showAppStatus: false
+          defaultEnable: false
 
           namespaceSelector:
-            any: true
+            matchNames:
+              - apps
 
           customApps:
+            - group: MCP Servers
+              apps:
+                - name: Agent Progress
+                  url: https://agent-progress.home.mcztest.com
+                  icon: mdi:robot
+                  info: Workflow tracking for AI agents
+                - name: Conversation History
+                  url: https://conversation-history.home.mcztest.com
+                  icon: mdi:message-text-clock
+                  info: Semantic search for conversations
+                - name: NC Soccer
+                  url: https://ncsoccer.home.mcztest.com
+                  icon: mdi:soccer
+                  info: Soccer predictions and standings
+                - name: Perfin Analysis
+                  url: https://perfin-analysis.home.mcztest.com
+                  icon: mdi:chart-line
+                  info: Budget modeling and spending analysis
+                - name: Monarch Money
+                  url: https://monarch-money.home.mcztest.com
+                  icon: mdi:currency-usd
+                  info: Financial data and transactions
+                - name: Proxmox K8s
+                  url: https://proxmox-k8s.home.mcztest.com
+                  icon: mdi:kubernetes
+                  info: Kubernetes cluster management
+            - group: Infrastructure
+              apps:
+                - name: ArgoCD
+                  url: https://argocd.home.mcztest.com
+                  icon: simple-icons:argo
+                  info: GitOps deployment
+                - name: Gitea
+                  url: https://gitea.home.mcztest.com
+                  icon: simple-icons:gitea
+                  info: Git server
+                - name: Grafana
+                  url: https://grafana.home.mcztest.com
+                  icon: simple-icons:grafana
+                  info: Monitoring dashboards
+                - name: Prometheus
+                  url: https://prometheus.home.mcztest.com
+                  icon: simple-icons:prometheus
+                  info: Metrics collection
             - group: VMs
               apps:
                 - name: Proxmox
                   url: https://proxmox.home.mcztest.com
                   icon: simple-icons:proxmox
+                  info: Hypervisor management
                 - name: Pi-hole
                   url: https://pihole.home.mcztest.com/admin
                   icon: simple-icons:pihole
+                  info: DNS and ad blocking
                 - name: Home Assistant
                   url: https://homeassistant.home.mcztest.com
                   icon: simple-icons:homeassistant
+                  info: Home automation
                 - name: Ubuntu Desktop
                   url: https://desktop.home.mcztest.com/vnc.html?autoconnect=true
                   icon: simple-icons:ubuntu
+                  info: Remote desktop
 
           globalBookmarks:
             - group: Quick Links
               bookmarks:
                 - name: GitHub
                   url: https://github.com/mzakany23/proxmox-k8s
-                - name: ArgoCD
-                  url: https://argocd.home.mcztest.com
-                - name: Gitea
-                  url: https://gitea.home.mcztest.com
 
         ingress:
           main:
