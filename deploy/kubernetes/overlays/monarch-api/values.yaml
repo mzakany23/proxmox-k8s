@@ -1,13 +1,9 @@
 # Values for monarch-api (monarch-money-mcp)
 # Using existing monarch-money-mcp image
 
-# Hajimari dashboard integration
+# Hajimari annotations disabled - apps defined in customApps instead
 hajimari:
-  enabled: true
-  icon: "mdi:currency-usd"
-  appName: "Monarch Money"
-  group: "MCP Servers"
-  info: "Financial data and transactions"
+  enabled: false
 
 image:
   repository: registry.home.mcztest.com/monarch-money-mcp

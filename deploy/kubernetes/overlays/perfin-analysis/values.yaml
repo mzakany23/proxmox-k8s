@@ -1,13 +1,9 @@
 # Values for perfin-analysis (perfin-analysis-mcp)
 # Using existing perfin-analysis-mcp image
 
-# Hajimari dashboard integration
+# Hajimari annotations disabled - apps defined in customApps instead
 hajimari:
-  enabled: true
-  icon: "mdi:chart-line"
-  appName: "Perfin Analysis"
-  group: "MCP Servers"
-  info: "Budget modeling and spending analysis"
+  enabled: false
 
 image:
   repository: registry.home.mcztest.com/perfin-analysis-mcp
