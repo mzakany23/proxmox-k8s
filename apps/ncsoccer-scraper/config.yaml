@@ -1,0 +1,25 @@
+# NC Soccer Hudson - Key West FC Configuration
+base_url: "https://nc-soccer-hudson.ezleagues.ezfacility.com"
+
+# Database storage path (default: ~/.ncsoccer/data/)
+db_path: "~/.ncsoccer/data"
+
+teams:
+  - name: "Key West FC"
+    leagues:
+      - id: 471403
+        name: "Mens Open B"
+        day: "Tuesday"
+        team_id: 3190980
+      - id: 473484
+        name: "Mens Open C1"
+        day: "Tuesday"
+        team_id: 3196239
+      - id: 471402
+        name: "Mens 40+ Friday"
+        day: "Friday"
+        team_id: 3188350
+      - id: 471401
+        name: "Mens 30+ Sunday"
+        day: "Sunday"
+        team_id: 3189947

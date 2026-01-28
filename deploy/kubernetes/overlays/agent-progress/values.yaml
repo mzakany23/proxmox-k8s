@@ -1,0 +1,54 @@
+# Values for agent-progress (agent-progress-mcp)
+# Using existing agent-progress-mcp image
+
+image:
+  repository: registry.home.mcztest.com/agent-progress-mcp
+  tag: latest
+  pullPolicy: Always
+
+service:
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  host: agent-progress-mcp.home.mcztest.com
+
+mcp:
+  enabled: true
+  transport: streamable-http
+
+healthCheck:
+  enabled: true
+  http:
+    enabled: false
+  tcp:
+    enabled: true
+    port: http
+
+# External PostgreSQL
+postgres:
+  enabled: true
+  external:
+    enabled: true
+    host: agent-progress-postgres.agent-progress.svc.cluster.local
+    port: 5432
+    database: agent_progress
+    user: agent_progress
+    existingSecret: agent-progress-db-credentials
+    passwordKey: password
+
+# Additional env vars (HOST/PORT instead of FASTMCP)
+env:
+  - name: HOST
+    value: "0.0.0.0"
+  - name: PORT
+    value: "8000"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

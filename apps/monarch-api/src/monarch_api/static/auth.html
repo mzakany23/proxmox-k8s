@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monarch API - Login</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+        }
+        .card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #f1f5f9;
+        }
+        .subtitle {
+            color: #94a3b8;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #cbd5e1;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:disabled {
+            background: #475569;
+            cursor: not-allowed;
+        }
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .alert-error {
+            background: #7f1d1d;
+            color: #fecaca;
+        }
+        .alert-success {
+            background: #14532d;
+            color: #bbf7d0;
+        }
+        .alert-info {
+            background: #1e3a5f;
+            color: #bfdbfe;
+        }
+        .hidden {
+            display: none;
+        }
+        .status {
+            text-align: center;
+            padding: 16px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        .status.authenticated {
+            color: #4ade80;
+        }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #475569;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .logout-btn {
+            background: #475569;
+            margin-top: 12px;
+        }
+        .logout-btn:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Monarch API</h1>
+            <p class="subtitle">Login with your Monarch Money credentials</p>
+
+            <div id="status-section" class="hidden">
+                <div id="status-message" class="status"></div>
+            </div>
+
+            <div id="alert" class="alert hidden"></div>
+
+            <!-- Login Form -->
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                </div>
+                <button type="submit" id="login-btn">Login</button>
+            </form>
+
+            <!-- MFA Form -->
+            <form id="mfa-form" class="hidden">
+                <div class="alert alert-info">
+                    Multi-factor authentication required. Check your authenticator app.
+                </div>
+                <div class="form-group">
+                    <label for="mfa-code">MFA Code</label>
+                    <input type="text" id="mfa-code" name="code" required autocomplete="one-time-code"
+                           pattern="[0-9]*" inputmode="numeric" maxlength="6">
+                </div>
+                <button type="submit" id="mfa-btn">Verify</button>
+            </form>
+
+            <!-- Authenticated Section -->
+            <div id="authenticated-section" class="hidden">
+                <div class="status authenticated">
+                    Authenticated as <span id="auth-email"></span>
+                </div>
+                <button id="logout-btn" class="logout-btn">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('login-form');
+        const mfaForm = document.getElementById('mfa-form');
+        const authenticatedSection = document.getElementById('authenticated-section');
+        const statusSection = document.getElementById('status-section');
+        const statusMessage = document.getElementById('status-message');
+        const alert = document.getElementById('alert');
+        const authEmail = document.getElementById('auth-email');
+
+        let pendingEmail = '';
+
+        function showAlert(message, type = 'error') {
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alert.classList.remove('hidden');
+        }
+
+        function hideAlert() {
+            alert.classList.add('hidden');
+        }
+
+        function showLoading(button, text) {
+            button.disabled = true;
+            button.innerHTML = `<span class="spinner"></span>${text}`;
+        }
+
+        function resetButton(button, text) {
+            button.disabled = false;
+            button.textContent = text;
+        }
+
+        function showLoginForm() {
+            loginForm.classList.remove('hidden');
+            mfaForm.classList.add('hidden');
+            authenticatedSection.classList.add('hidden');
+        }
+
+        function showMfaForm() {
+            loginForm.classList.add('hidden');
+            mfaForm.classList.remove('hidden');
+            authenticatedSection.classList.add('hidden');
+            document.getElementById('mfa-code').focus();
+        }
+
+        function showAuthenticated(email) {
+            loginForm.classList.add('hidden');
+            mfaForm.classList.add('hidden');
+            authenticatedSection.classList.remove('hidden');
+            authEmail.textContent = email;
+        }
+
+        // Check auth status on load
+        async function checkStatus() {
+            try {
+                const response = await fetch('/auth/status');
+                const data = await response.json();
+
+                if (data.authenticated) {
+                    showAuthenticated(data.email || 'unknown');
+                } else {
+                    showLoginForm();
+                }
+            } catch (e) {
+                showLoginForm();
+            }
+        }
+
+        // Login form submission
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('login-btn');
+
+            showLoading(btn, 'Logging in...');
+            pendingEmail = email;
+
+            try {
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.mfa_required) {
+                    showMfaForm();
+                } else if (data.authenticated) {
+                    showAlert('Login successful! Token saved.', 'success');
+                    showAuthenticated(email);
+                } else {
+                    showAlert(data.detail || 'Login failed');
+                }
+            } catch (e) {
+                showAlert('Connection error. Please try again.');
+            } finally {
+                resetButton(btn, 'Login');
+            }
+        });
+
+        // MFA form submission
+        mfaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+
+            const code = document.getElementById('mfa-code').value;
+            const btn = document.getElementById('mfa-btn');
+
+            showLoading(btn, 'Verifying...');
+
+            try {
+                const response = await fetch('/auth/mfa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+
+                const data = await response.json();
+
+                if (data.authenticated) {
+                    showAlert('MFA verified! Token saved.', 'success');
+                    showAuthenticated(pendingEmail);
+                } else {
+                    showAlert(data.detail || 'MFA verification failed');
+                }
+            } catch (e) {
+                showAlert('Connection error. Please try again.');
+            } finally {
+                resetButton(btn, 'Verify');
+            }
+        });
+
+        // Logout button
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            try {
+                await fetch('/auth/logout', { method: 'POST' });
+                showAlert('Logged out successfully', 'info');
+                showLoginForm();
+                document.getElementById('email').value = '';
+                document.getElementById('password').value = '';
+                document.getElementById('mfa-code').value = '';
+            } catch (e) {
+                showAlert('Logout failed');
+            }
+        });
+
+        // Initialize
+        checkStatus();
+    </script>
+</body>
+</html>

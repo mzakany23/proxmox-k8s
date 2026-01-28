@@ -1,0 +1,19 @@
+[project]
+name = "perfin-mcp"
+version = "0.1.0"
+description = "MCP server for personal finance analysis"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=1.0.0",
+    "openpyxl>=3.1.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+perfin-mcp = "perfin_mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/perfin_mcp"]
