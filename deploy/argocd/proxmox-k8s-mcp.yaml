@@ -1,0 +1,28 @@
+# ArgoCD Application for proxmox-k8s-mcp
+# TypeScript MCP server for K8s cluster management
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: proxmox-k8s-mcp
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    homelab.mcztest.com/type: mcp
+spec:
+  project: default
+  source:
+    repoURL: http://gitea-http.gitea:3000/homelab/proxmox.git
+    targetRevision: HEAD
+    path: apps/proxmox-k8s-mcp/deploy/helm/proxmox-k8s-mcp
+    helm:
+      valueFiles:
+        - values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
