@@ -17,6 +17,8 @@ spec:
           # Exclude apps managed by individual Applications (different chart or namespace)
           - path: deploy/kubernetes/overlays/hajimari
             exclude: true  # Uses external hajimari Helm chart, not homelab-app
+          - path: deploy/kubernetes/overlays/agent-progress
+            exclude: true  # Has own repo with UI/API/DB stack
   template:
     metadata:
       name: '{{path.basename}}'
