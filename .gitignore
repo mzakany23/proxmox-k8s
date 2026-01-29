@@ -61,3 +61,6 @@ RECOVERY.md
 
 # Conversation logs
 conversation/
+
+# Claude Code local config
+.claude/
