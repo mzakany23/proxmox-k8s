@@ -6,8 +6,9 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare
     nginx.ingress.kubernetes.io/proxy-body-size: "0"  # Allow large git pushes
-    nginx.ingress.kubernetes.io/auth-url: "https://auth.home.mcztest.com/api/verify"
-    nginx.ingress.kubernetes.io/auth-signin: "https://auth.home.mcztest.com?rd=$escaped_request_uri"
+    # Auth disabled - Authelia not deployed
+    # nginx.ingress.kubernetes.io/auth-url: "https://auth.home.mcztest.com/api/verify"
+    # nginx.ingress.kubernetes.io/auth-signin: "https://auth.home.mcztest.com?rd=$escaped_request_uri"
 spec:
   ingressClassName: nginx
   tls:
