@@ -1,0 +1,202 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "homelab-app.fullname" . }}
+  labels:
+    {{- include "homelab-app.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "homelab-app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "homelab-app.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "homelab-app.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Release.Name }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          {{- if .Values.healthCheck.enabled }}
+          {{- if .Values.healthCheck.http.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthCheck.http.path }}
+              port: {{ .Values.healthCheck.http.port }}
+            initialDelaySeconds: {{ .Values.healthCheck.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthCheck.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthCheck.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthCheck.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthCheck.http.path }}
+              port: {{ .Values.healthCheck.http.port }}
+            initialDelaySeconds: {{ .Values.healthCheck.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthCheck.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthCheck.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthCheck.readiness.failureThreshold }}
+          {{- else if .Values.healthCheck.tcp.enabled }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.healthCheck.tcp.port }}
+            initialDelaySeconds: {{ .Values.healthCheck.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthCheck.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthCheck.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthCheck.liveness.failureThreshold }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.healthCheck.tcp.port }}
+            initialDelaySeconds: {{ .Values.healthCheck.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthCheck.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthCheck.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthCheck.readiness.failureThreshold }}
+          {{- end }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            {{- if .Values.mcp.enabled }}
+            - name: MCP_TRANSPORT
+              value: {{ .Values.mcp.transport | quote }}
+            - name: FASTMCP_HOST
+              value: "0.0.0.0"
+            - name: FASTMCP_PORT
+              value: {{ .Values.service.targetPort | quote }}
+            {{- end }}
+            {{- if and .Values.postgres.enabled .Values.postgres.external.enabled }}
+            - name: DATABASE_HOST
+              value: {{ .Values.postgres.external.host | quote }}
+            - name: DATABASE_PORT
+              value: {{ .Values.postgres.external.port | quote }}
+            - name: DATABASE_NAME
+              value: {{ .Values.postgres.external.database | quote }}
+            - name: DATABASE_USER
+              value: {{ .Values.postgres.external.user | quote }}
+            {{- if .Values.postgres.external.existingSecret }}
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.external.existingSecret }}
+                  key: {{ .Values.postgres.external.passwordKey }}
+            {{- end }}
+            {{- else if and .Values.postgres.enabled .Values.postgres.sidecar.enabled }}
+            - name: DATABASE_HOST
+              value: "localhost"
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_NAME
+              value: {{ .Release.Name | replace "-" "_" | quote }}
+            - name: DATABASE_USER
+              value: "postgres"
+            - name: DATABASE_PASSWORD
+              value: "postgres"
+            {{- end }}
+            {{- if and .Values.redis.enabled .Values.redis.external.enabled }}
+            - name: REDIS_HOST
+              value: {{ .Values.redis.external.host | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.redis.external.port | quote }}
+            {{- if .Values.redis.external.existingSecret }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.external.existingSecret }}
+                  key: {{ .Values.redis.external.passwordKey }}
+            {{- end }}
+            {{- else if and .Values.redis.enabled .Values.redis.sidecar.enabled }}
+            - name: REDIS_HOST
+              value: "localhost"
+            - name: REDIS_PORT
+              value: "6379"
+            {{- end }}
+            {{- with .Values.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.persistence.mountPath }}
+          {{- end }}
+        {{- if and .Values.postgres.enabled .Values.postgres.sidecar.enabled }}
+        - name: postgres
+          image: {{ .Values.postgres.sidecar.image }}
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Release.Name | replace "-" "_" | quote }}
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+        {{- end }}
+        {{- if and .Values.redis.enabled .Values.redis.sidecar.enabled }}
+        - name: redis
+          image: {{ .Values.redis.sidecar.image }}
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+        {{- end }}
+      {{- if or .Values.persistence.enabled (and .Values.postgres.enabled .Values.postgres.sidecar.enabled) (and .Values.redis.enabled .Values.redis.sidecar.enabled) }}
+      volumes:
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "homelab-app.fullname" . }}-data
+        {{- end }}
+        {{- if and .Values.postgres.enabled .Values.postgres.sidecar.enabled }}
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: {{ include "homelab-app.fullname" . }}-postgres
+        {{- end }}
+        {{- if and .Values.redis.enabled .Values.redis.sidecar.enabled }}
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: {{ include "homelab-app.fullname" . }}-redis
+        {{- end }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

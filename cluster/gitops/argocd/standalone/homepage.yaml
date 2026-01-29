@@ -1,0 +1,151 @@
+# ArgoCD Application for Homepage dashboard
+# Replaces Hajimari with a cleaner, more flexible dashboard
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homepage
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    homelab.mcztest.com/type: dashboard
+spec:
+  project: default
+  source:
+    repoURL: https://jameswynn.github.io/helm-charts
+    targetRevision: 1.2.3
+    chart: homepage
+    helm:
+      releaseName: homepage
+      values: |
+        image:
+          repository: ghcr.io/gethomepage/homepage
+          tag: latest
+
+        env:
+          HOMEPAGE_ALLOWED_HOSTS: "home.mcztest.com"
+
+        config:
+          settings:
+            title: Homelab
+            theme: dark
+            color: slate
+            headerStyle: clean
+            layout:
+              MCP Servers:
+                style: column
+              Infrastructure:
+                style: column
+              VMs:
+                style: column
+
+          services:
+            - MCP Servers:
+                - Agent Progress:
+                    href: https://agent-progress.home.mcztest.com
+                    description: Workflow tracking for AI agents
+                    icon: mdi-robot
+                - Conversation History:
+                    href: https://conversation-history.home.mcztest.com
+                    description: Semantic search for conversations
+                    icon: mdi-message-text-clock
+                - NC Soccer:
+                    href: https://ncsoccer.home.mcztest.com
+                    description: Soccer predictions and standings
+                    icon: mdi-soccer
+                - Perfin Analysis:
+                    href: https://perfin-analysis.home.mcztest.com
+                    description: Budget modeling and spending analysis
+                    icon: mdi-chart-line
+                - Monarch Money:
+                    href: https://monarch-money.home.mcztest.com
+                    description: Financial data and transactions
+                    icon: mdi-currency-usd
+                - Proxmox K8s:
+                    href: https://proxmox-k8s.home.mcztest.com
+                    description: Kubernetes cluster management
+                    icon: mdi-kubernetes
+
+            - Infrastructure:
+                - ArgoCD:
+                    href: https://argocd.home.mcztest.com
+                    description: GitOps deployment
+                    icon: si-argo
+                - Gitea:
+                    href: https://gitea.home.mcztest.com
+                    description: Git server
+                    icon: si-gitea
+                - Grafana:
+                    href: https://grafana.home.mcztest.com
+                    description: Monitoring dashboards
+                    icon: si-grafana
+                - Prometheus:
+                    href: https://prometheus.home.mcztest.com
+                    description: Metrics collection
+                    icon: si-prometheus
+
+            - VMs:
+                - Proxmox:
+                    href: https://proxmox.home.mcztest.com
+                    description: Hypervisor management
+                    icon: si-proxmox
+                - Pi-hole:
+                    href: https://pihole.home.mcztest.com/admin
+                    description: DNS and ad blocking
+                    icon: si-pihole
+                - Home Assistant:
+                    href: https://homeassistant.home.mcztest.com
+                    description: Home automation
+                    icon: si-homeassistant
+                - Ubuntu Desktop:
+                    href: https://desktop.home.mcztest.com/vnc.html?autoconnect=true
+                    description: Remote desktop
+                    icon: si-ubuntu
+
+          bookmarks:
+            - Quick Links:
+                - GitHub:
+                    - href: https://github.com/mzakany23/proxmox-k8s
+                      icon: si-github
+
+          widgets: []
+
+          kubernetes:
+            mode: disabled
+
+        ingress:
+          main:
+            enabled: true
+            ingressClassName: nginx
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+            hosts:
+              - host: home.mcztest.com
+                paths:
+                  - path: /
+                    pathType: Prefix
+            tls:
+              - secretName: homepage-tls
+                hosts:
+                  - home.mcztest.com
+
+        serviceAccount:
+          create: true
+          name: homepage
+
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

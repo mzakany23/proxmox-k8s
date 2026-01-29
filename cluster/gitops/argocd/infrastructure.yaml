@@ -1,0 +1,41 @@
+# ArgoCD Application for cluster core infrastructure
+# Manages: MetalLB, cert-manager, ingress-nginx, sealed-secrets, monitoring
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infrastructure
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    homelab.mcztest.com/type: infrastructure
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: http://gitea-http.gitea:3000/homelab/proxmox.git
+    targetRevision: HEAD
+    path: cluster/core
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  # Ignore server-side mutations on CRDs
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      name: bgppeers.metallb.io
+      jsonPointers:
+        - /spec/conversion
+        - /status
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /status
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # ServerSideApply helps with CRD drift
+      - ServerSideApply=true

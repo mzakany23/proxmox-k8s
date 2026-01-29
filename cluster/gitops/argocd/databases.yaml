@@ -1,0 +1,27 @@
+# ArgoCD Application for database services
+# Manages: Postgres instances, Milvus vector DB
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: databases
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    homelab.mcztest.com/type: database
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  project: default
+  source:
+    repoURL: http://gitea-http.gitea:3000/homelab/proxmox.git
+    targetRevision: HEAD
+    path: cluster/databases
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

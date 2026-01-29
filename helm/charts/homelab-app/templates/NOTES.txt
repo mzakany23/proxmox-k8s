@@ -1,0 +1,48 @@
+{{ .Release.Name }} has been deployed!
+
+{{- if .Values.ingress.enabled }}
+Application URL: https://{{ .Values.ingress.host }}
+{{- else }}
+The application is not exposed via ingress.
+To access it, use port-forward:
+  kubectl port-forward svc/{{ include "homelab-app.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }}
+{{- end }}
+
+{{- if .Values.mcp.enabled }}
+
+MCP Configuration:
+  Transport: {{ .Values.mcp.transport }}
+  {{- if .Values.ingress.enabled }}
+  URL: https://{{ .Values.ingress.host }}/sse
+  {{- end }}
+{{- end }}
+
+{{- if and .Values.postgres.enabled .Values.postgres.external.enabled }}
+
+PostgreSQL (External):
+  Host: {{ .Values.postgres.external.host }}
+  Port: {{ .Values.postgres.external.port }}
+  Database: {{ .Values.postgres.external.database }}
+{{- else if and .Values.postgres.enabled .Values.postgres.sidecar.enabled }}
+
+PostgreSQL (Sidecar):
+  Host: localhost
+  Port: 5432
+  Database: {{ .Release.Name | replace "-" "_" }}
+{{- end }}
+
+{{- if and .Values.redis.enabled .Values.redis.external.enabled }}
+
+Redis (External):
+  Host: {{ .Values.redis.external.host }}
+  Port: {{ .Values.redis.external.port }}
+{{- else if and .Values.redis.enabled .Values.redis.sidecar.enabled }}
+
+Redis (Sidecar):
+  Host: localhost
+  Port: 6379
+{{- end }}
+
+Useful commands:
+  kubectl get pods -l app.kubernetes.io/instance={{ .Release.Name }}
+  kubectl logs -l app.kubernetes.io/instance={{ .Release.Name }}

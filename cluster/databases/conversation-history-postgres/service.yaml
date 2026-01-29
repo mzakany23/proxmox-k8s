@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: conversation-history-postgres
+  namespace: apps
+  labels:
+    app: conversation-history-postgres
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: postgres
+  selector:
+    app: conversation-history-postgres
+---
+# External access for debugging/admin (optional)
+apiVersion: v1
+kind: Service
+metadata:
+  name: conversation-history-postgres-external
+  namespace: apps
+  labels:
+    app: conversation-history-postgres
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: "192.168.68.103"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: postgres
+  selector:
+    app: conversation-history-postgres

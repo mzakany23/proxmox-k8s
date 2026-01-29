@@ -1,0 +1,166 @@
+# Shared homelab-app Helm chart
+# All features are opt-in via boolean flags
+
+# Basic deployment settings
+replicaCount: 1
+
+image:
+  repository: ""  # REQUIRED: set per-app (e.g., registry.home.mcztest.com/myapp)
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Service account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod configuration
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+# Ingress configuration (opt-in)
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+  host: ""  # REQUIRED if enabled (e.g., myapp.home.mcztest.com)
+  path: /
+  pathType: Prefix
+  tls:
+    enabled: true
+    secretName: ""  # Auto-generated if empty: <release-name>-tls
+
+# MCP server configuration (opt-in)
+mcp:
+  enabled: false
+  transport: streamable-http
+  # SSE-specific nginx annotations (applied when enabled)
+  sseAnnotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+
+# Hajimari dashboard integration (opt-in)
+# Adds annotations for auto-discovery by Hajimari dashboard
+hajimari:
+  enabled: false
+  icon: ""       # e.g., "mdi:api", "simple-icons:kubernetes"
+  appName: ""    # Display name (defaults to release name)
+  group: ""      # Group name for organization (e.g., "MCP Servers", "Monitoring")
+  info: ""       # Optional description
+  url: ""        # Override URL (defaults to ingress URL)
+
+# PostgreSQL configuration (opt-in)
+postgres:
+  enabled: false
+  # Use external PostgreSQL (recommended for production)
+  external:
+    enabled: false
+    host: ""
+    port: 5432
+    database: ""
+    user: ""
+    existingSecret: ""
+    passwordKey: "database-password"
+  # Deploy PostgreSQL as sidecar (for simple deployments)
+  sidecar:
+    enabled: false
+    image: postgres:15-alpine
+    storage: 1Gi
+    storageClass: ""
+
+# Redis configuration (opt-in)
+redis:
+  enabled: false
+  external:
+    enabled: false
+    host: ""
+    port: 6379
+    existingSecret: ""
+    passwordKey: "redis-password"
+  sidecar:
+    enabled: false
+    image: redis:7-alpine
+    storage: 1Gi
+
+# Persistent storage (opt-in)
+persistence:
+  enabled: false
+  size: 1Gi
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  mountPath: /data
+
+# Resource limits
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+# Health checks
+healthCheck:
+  enabled: true
+  # HTTP health check (default)
+  http:
+    enabled: true
+    path: /health
+    port: http
+  # TCP health check (use when no HTTP endpoint available)
+  tcp:
+    enabled: false
+    port: http
+  # Custom probe settings
+  liveness:
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# Autoscaling (opt-in)
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+# Node placement
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Additional environment variables
+env: []
+# - name: MY_VAR
+#   value: "my-value"
+
+# Environment from ConfigMaps/Secrets
+envFrom: []
+# - secretRef:
+#     name: my-secret
+
+# Extra secrets to create (for credentials)
+secrets: {}
+# my-secret-key: "base64-encoded-value"

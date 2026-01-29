@@ -1,0 +1,14 @@
+apiVersion: v2
+name: homelab-app
+description: Shared Helm chart for homelab applications with opt-in features
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+
+# This chart provides:
+# - Basic deployment with health checks
+# - Optional ingress with TLS
+# - Optional PostgreSQL sidecar/deployment
+# - Optional Redis sidecar/deployment
+# - Optional persistent storage
+# - Optional MCP server configuration

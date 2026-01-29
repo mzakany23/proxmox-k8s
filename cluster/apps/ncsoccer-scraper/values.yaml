@@ -1,0 +1,68 @@
+# Values for ncsoccer-scraper (ncsoccer-mcp)
+# Using existing ncsoccer-mcp image
+
+# Hajimari annotations disabled - apps defined in customApps instead
+hajimari:
+  enabled: false
+
+image:
+  repository: registry.home.mcztest.com/ncsoccer-mcp
+  tag: latest
+  pullPolicy: Always
+
+service:
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  host: ncsoccer.home.mcztest.com
+
+mcp:
+  enabled: true
+  transport: streamable-http
+
+healthCheck:
+  enabled: true
+  http:
+    enabled: false
+  tcp:
+    enabled: true
+    port: http
+
+env:
+  - name: NCSOCCER_DATABASE_HOST
+    value: "postgres.conversation-history.svc.cluster.local"
+  - name: NCSOCCER_DATABASE_PORT
+    value: "5432"
+  - name: NCSOCCER_DATABASE_NAME
+    value: "ncsoccer"
+  - name: NCSOCCER_DATABASE_USER
+    value: "convo_user"
+  - name: NCSOCCER_DATABASE_PASSWORD
+    value: "convo_password"
+  - name: OPENAI_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: ncsoccer-mcp-openai
+        key: openai-api-key
+  - name: AWS_ACCESS_KEY_ID
+    valueFrom:
+      secretKeyRef:
+        name: ncsoccer-mcp-aws
+        key: aws-access-key-id
+  - name: AWS_SECRET_ACCESS_KEY
+    valueFrom:
+      secretKeyRef:
+        name: ncsoccer-mcp-aws
+        key: aws-secret-access-key
+  - name: AWS_DEFAULT_REGION
+    value: "us-east-1"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

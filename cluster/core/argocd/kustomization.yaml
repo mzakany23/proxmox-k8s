@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# ArgoCD SERVER configuration (not Applications)
+# The ArgoCD server itself is installed via the official manifests
+# This just adds our custom ingress
+
+resources:
+- ingress.yaml

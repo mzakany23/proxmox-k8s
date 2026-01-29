@@ -1,0 +1,49 @@
+# Values for perfin-analysis (perfin-analysis-mcp)
+# Using existing perfin-analysis-mcp image
+
+# Hajimari annotations disabled - apps defined in customApps instead
+hajimari:
+  enabled: false
+
+image:
+  repository: registry.home.mcztest.com/perfin-analysis-mcp
+  tag: latest
+  pullPolicy: Always
+
+service:
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  host: perfin-analysis.home.mcztest.com
+
+mcp:
+  enabled: true
+  transport: streamable-http
+
+healthCheck:
+  enabled: true
+  http:
+    enabled: false
+  tcp:
+    enabled: true
+    port: http
+
+# Persistent storage for transaction data
+persistence:
+  enabled: true
+  size: 1Gi
+  mountPath: /data/transactions
+
+env:
+  - name: PERFIN_DATA_DIR
+    value: "/data/transactions"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

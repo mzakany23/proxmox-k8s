@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# ArgoCD Application definitions
+# Apply this to bootstrap GitOps: kubectl apply -k cluster/gitops/argocd/
+
+resources:
+# Core applications (sync-waves determine order)
+- infrastructure.yaml   # sync-wave: 1 - cluster/core
+- platform.yaml         # sync-wave: 3 - cluster/platform
+- databases.yaml        # sync-wave: 4 - cluster/databases
+- apps.yaml             # sync-wave: 5 - cluster/apps (ApplicationSet)
+
+# Standalone applications (not managed by ApplicationSet)
+- standalone/homepage.yaml
+- standalone/proxmox-k8s-mcp.yaml

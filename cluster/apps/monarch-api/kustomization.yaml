@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# monarch-api - Monarch Money MCP Server
+#
+# This app is deployed via ArgoCD ApplicationSet which:
+# 1. Auto-discovers apps in cluster/apps/*
+# 2. Renders helm/charts/homelab-app with this values.yaml
+#
+# For local testing, run from repo root:
+#   helm template monarch-api ./helm/charts/homelab-app -f ./cluster/apps/monarch-api/values.yaml -n apps
+
+namespace: apps
