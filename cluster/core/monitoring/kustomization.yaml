@@ -3,5 +3,6 @@ kind: Kustomization
 
 # Core monitoring components - scraped by Prometheus
 resources:
+- namespace.yaml
 - node-exporter.yaml
 - kube-state-metrics.yaml
