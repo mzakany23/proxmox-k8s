@@ -9,10 +9,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - grafana.mcztest.com
+        - grafana.home.mcztest.com
       secretName: grafana-tls
   rules:
-    - host: grafana.mcztest.com
+    - host: grafana.home.mcztest.com
       http:
         paths:
           - path: /
