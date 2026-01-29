@@ -32,7 +32,7 @@ healthCheck:
 
 env:
   - name: NCSOCCER_DATABASE_HOST
-    value: "postgres.conversation-history.svc.cluster.local"
+    value: "conversation-history-postgres.apps.svc.cluster.local"
   - name: NCSOCCER_DATABASE_PORT
     value: "5432"
   - name: NCSOCCER_DATABASE_NAME
