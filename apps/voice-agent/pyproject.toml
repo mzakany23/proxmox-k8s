@@ -1,0 +1,14 @@
+[project]
+name = "voice-agent"
+version = "0.1.0"
+description = "Voice interface to Claude with MCP tool integration"
+requires-python = ">=3.10"
+dependencies = [
+    "pipecat-ai[anthropic,openai,silero,local]>=0.0.60",
+    "python-dotenv>=1.0.0",
+    "aiohttp>=3.9.0",
+    "loguru>=0.7.0",
+]
+
+[tool.uv]
+package = false
