@@ -4,6 +4,7 @@ namespace: monitoring
 resources:
   - grafana-config.yaml
   - grafana-dashboards.yaml
+  - grafana-dashboards-comprehensive.yaml
   - grafana-pvc.yaml
   - grafana-deployment.yaml
   - grafana-service.yaml
