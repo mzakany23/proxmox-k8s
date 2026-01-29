@@ -64,3 +64,4 @@ conversation/
 
 # Claude Code local config
 .claude/
+apps/voice-agent/
