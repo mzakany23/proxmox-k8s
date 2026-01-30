@@ -2,13 +2,6 @@
 
 A self-hosted platform for running applications, experimenting with infrastructure, and managing local devices. Built on Kubernetes with GitOps workflows and automatic HTTPS.
 
-## What You Can Do
-
-- **Run MCP servers** - Deploy AI tool integrations (conversation-history, monarch-api, ncsoccer-scraper)
-- **Self-host services** - Gitea, Prometheus, Grafana, container registry
-- **Rapid prototyping** - Add a `values.yaml`, push to git, app deploys automatically
-- **Manage local devices** - HTTPS certificates for Proxmox, routers, NAS
-
 ## Quick Start
 
 Deploy an app by adding a values file:
