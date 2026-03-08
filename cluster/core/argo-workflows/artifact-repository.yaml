@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: artifact-repositories
+  namespace: argo-workflows
+data:
+  default-v1: |
+    s3:
+      bucket: argo-artifacts
+      endpoint: minio.minio-system:9000
+      insecure: true
+      accessKey: minioadmin
+      secretKey: minioadmin
+      useSDK: true
+    archiveLogs: false

@@ -9,5 +9,6 @@ resources:
 - ingress-nginx/install.yaml
 - cert-manager/
 - sealed-secrets/sealed-secrets.yaml
-- monitoring/  # node-exporter, kube-state-metrics
-- argocd/      # ArgoCD server ingress
+- monitoring/        # node-exporter, kube-state-metrics
+- argo-workflows/    # Argo Workflows DAG orchestration
+- argocd/            # ArgoCD server ingress
