@@ -7,6 +7,12 @@ terraform {
       version = "~> 0.50"
     }
   }
+
+  backend "s3" {
+    bucket = "ncsh-terraform-state"
+    key    = "proxmox/terraform.tfstate"
+    region = "us-east-2"
+  }
 }
 
 provider "proxmox" {

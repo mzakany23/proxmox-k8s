@@ -3,12 +3,6 @@ locals {
   ssh_public_key = file(pathexpand(var.ssh_public_key_file))
 }
 
-# Generate k3s token for cluster
-resource "random_password" "k3s_token" {
-  length  = 32
-  special = false
-}
-
 # Control Plane Node
 resource "proxmox_virtual_environment_vm" "control_plane" {
   name        = var.control_plane_config.name
@@ -68,9 +62,8 @@ resource "proxmox_virtual_environment_vm" "control_plane" {
   }
 
   lifecycle {
-    ignore_changes = [
-      network_device,
-    ]
+    prevent_destroy = true
+    ignore_changes  = all
   }
 }
 
@@ -136,9 +129,8 @@ resource "proxmox_virtual_environment_vm" "workers" {
   depends_on = [proxmox_virtual_environment_vm.control_plane]
 
   lifecycle {
-    ignore_changes = [
-      network_device,
-    ]
+    prevent_destroy = true
+    ignore_changes  = all
   }
 }
 
@@ -203,6 +195,72 @@ resource "proxmox_virtual_environment_vm" "milvus_node" {
   depends_on = [proxmox_virtual_environment_vm.control_plane]
 
   lifecycle {
+    prevent_destroy = true
+    ignore_changes  = all
+  }
+}
+
+# Inference Dedicated Node (Ollama / local models)
+resource "proxmox_virtual_environment_vm" "inference_node" {
+  name        = var.inference_node_config.name
+  description = "Kubernetes Inference Dedicated Node"
+  node_name   = var.proxmox_node
+
+  clone {
+    vm_id = var.template_id
+    full  = true
+  }
+
+  cpu {
+    cores = var.inference_node_config.cores
+    type  = "host"
+  }
+
+  memory {
+    dedicated = var.inference_node_config.memory
+  }
+
+  disk {
+    datastore_id = "local-lvm"
+    interface    = "scsi0"
+    size         = var.inference_node_config.disk
+  }
+
+  network_device {
+    bridge = var.network_bridge
+  }
+
+  operating_system {
+    type = "l26"
+  }
+
+  agent {
+    enabled = true
+  }
+
+  initialization {
+    ip_config {
+      ipv4 {
+        address = "${var.inference_node_config.ip}/24"
+        gateway = var.network_gateway
+      }
+    }
+
+    dns {
+      servers = var.dns_servers
+    }
+
+    user_account {
+      username = var.vm_user
+      keys     = [local.ssh_public_key]
+    }
+
+    user_data_file_id = proxmox_virtual_environment_file.inference_cloud_init.id
+  }
+
+  depends_on = [proxmox_virtual_environment_vm.control_plane]
+
+  lifecycle {
     ignore_changes = [
       network_device,
     ]
@@ -218,7 +276,7 @@ resource "proxmox_virtual_environment_file" "control_plane_cloud_init" {
   source_raw {
     data = templatefile("${path.module}/cloud-init/control-plane.yaml.tpl", {
       hostname   = var.control_plane_config.name
-      k3s_token  = random_password.k3s_token.result
+      k3s_token  = var.k3s_token
       k3s_version = var.k3s_version
     })
     file_name = "control-plane-cloud-init.yaml"
@@ -235,7 +293,7 @@ resource "proxmox_virtual_environment_file" "worker_cloud_init" {
   source_raw {
     data = templatefile("${path.module}/cloud-init/worker.yaml.tpl", {
       hostname        = var.worker_nodes[count.index].name
-      k3s_token       = random_password.k3s_token.result
+      k3s_token       = var.k3s_token
       k3s_version     = var.k3s_version
       control_plane_ip = proxmox_virtual_environment_vm.control_plane.ipv4_addresses[1][0]
     })
@@ -254,11 +312,30 @@ resource "proxmox_virtual_environment_file" "milvus_cloud_init" {
   source_raw {
     data = templatefile("${path.module}/cloud-init/milvus-worker.yaml.tpl", {
       hostname        = var.milvus_node_config.name
-      k3s_token       = random_password.k3s_token.result
+      k3s_token       = var.k3s_token
       k3s_version     = var.k3s_version
       control_plane_ip = proxmox_virtual_environment_vm.control_plane.ipv4_addresses[1][0]
     })
     file_name = "milvus-cloud-init.yaml"
+  }
+
+  depends_on = [proxmox_virtual_environment_vm.control_plane]
+}
+
+# Cloud-init configuration for Inference node
+resource "proxmox_virtual_environment_file" "inference_cloud_init" {
+  content_type = "snippets"
+  datastore_id = "local"
+  node_name    = var.proxmox_node
+
+  source_raw {
+    data = templatefile("${path.module}/cloud-init/inference-worker.yaml.tpl", {
+      hostname        = var.inference_node_config.name
+      k3s_token       = var.k3s_token
+      k3s_version     = var.k3s_version
+      control_plane_ip = proxmox_virtual_environment_vm.control_plane.ipv4_addresses[1][0]
+    })
+    file_name = "inference-cloud-init.yaml"
   }
 
   depends_on = [proxmox_virtual_environment_vm.control_plane]
