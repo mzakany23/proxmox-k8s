@@ -261,9 +261,8 @@ resource "proxmox_virtual_environment_vm" "inference_node" {
   depends_on = [proxmox_virtual_environment_vm.control_plane]
 
   lifecycle {
-    ignore_changes = [
-      network_device,
-    ]
+    prevent_destroy = true
+    ignore_changes  = all
   }
 }
 
