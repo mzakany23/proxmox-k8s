@@ -71,6 +71,17 @@ variable "milvus_node_config" {
   })
 }
 
+variable "inference_node_config" {
+  description = "Inference dedicated node configuration (Ollama / local models)"
+  type = object({
+    name   = string
+    cores  = number
+    memory = number
+    disk   = number
+    ip     = string
+  })
+}
+
 variable "network_bridge" {
   description = "Proxmox network bridge"
   type        = string
@@ -93,4 +104,10 @@ variable "k3s_version" {
   description = "k3s version channel"
   type        = string
   default     = "stable"
+}
+
+variable "k3s_token" {
+  description = "K3s cluster token (must match existing cluster)"
+  type        = string
+  sensitive   = true
 }

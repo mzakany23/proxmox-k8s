@@ -16,10 +16,14 @@ output "worker_ips" {
   }
 }
 
-output "k3s_token" {
-  description = "K3s cluster token (sensitive)"
-  value       = random_password.k3s_token.result
-  sensitive   = true
+output "milvus_ip" {
+  description = "Milvus node IP address"
+  value       = try(proxmox_virtual_environment_vm.milvus_node.ipv4_addresses[1][0], "pending")
+}
+
+output "inference_ip" {
+  description = "Inference node IP address"
+  value       = try(proxmox_virtual_environment_vm.inference_node.ipv4_addresses[1][0], "pending")
 }
 
 output "ssh_connection_strings" {
@@ -31,6 +35,12 @@ output "ssh_connection_strings" {
     {
       for idx, worker in proxmox_virtual_environment_vm.workers :
       worker.name => "ssh ${var.vm_user}@${try(worker.ipv4_addresses[1][0], "pending")}"
+    },
+    {
+      (proxmox_virtual_environment_vm.milvus_node.name) = "ssh ${var.vm_user}@${try(proxmox_virtual_environment_vm.milvus_node.ipv4_addresses[1][0], "pending")}"
+    },
+    {
+      (proxmox_virtual_environment_vm.inference_node.name) = "ssh ${var.vm_user}@${try(proxmox_virtual_environment_vm.inference_node.ipv4_addresses[1][0], "pending")}"
     }
   )
 }
