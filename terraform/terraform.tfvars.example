@@ -38,7 +38,7 @@ worker_nodes = [
   }
 ]
 
-# Milvus dedicated node (vector database)
+# Milvus dedicated node (currently re-purposed as the stateful workloads node)
 milvus_node_config = {
   name   = "k8s-milvus-1"
   cores  = 4
@@ -54,6 +54,17 @@ inference_node_config = {
   memory = 20480   # 20 GiB — Qwen3 14B needs ~11GB + OS + headroom
   disk   = 50      # 30GB model storage + OS + container images
   ip     = "192.168.68.54"
+}
+
+# Storage node — standalone MinIO host (NOT a k8s node).
+# Lives outside the cluster so object storage / DB backups survive
+# cluster rebuilds and don't compete with kubelet/containerd for disk.
+storage_node_config = {
+  name   = "storage-1"
+  cores  = 2
+  memory = 2048
+  disk   = 100
+  ip     = "192.168.68.60"
 }
 
 # Optional overrides
