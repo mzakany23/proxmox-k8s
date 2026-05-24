@@ -25,6 +25,7 @@ spec:
             - '--web.console.libraries=/usr/share/prometheus/console_libraries'
             - '--web.console.templates=/usr/share/prometheus/consoles'
             - '--storage.tsdb.retention.time=30d'
+            - '--storage.tsdb.retention.size=8GB'
             - '--web.enable-lifecycle'
           ports:
             - containerPort: 9090
