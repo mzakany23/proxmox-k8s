@@ -266,6 +266,74 @@ resource "proxmox_virtual_environment_vm" "inference_node" {
   }
 }
 
+# Storage Node — dedicated VM for object storage (MinIO). NOT a k8s node.
+# Lives outside the cluster so the cluster can be rebuilt without
+# touching backups/blobs. Also stops MinIO data growth from competing
+# with kubelet/containerd for any worker's rootfs.
+resource "proxmox_virtual_environment_vm" "storage_node" {
+  name        = var.storage_node_config.name
+  description = "Object storage (MinIO via systemd) — outside k8s cluster"
+  node_name   = var.proxmox_node
+
+  clone {
+    vm_id = var.template_id
+    full  = true
+  }
+
+  cpu {
+    cores = var.storage_node_config.cores
+    type  = "host"
+  }
+
+  memory {
+    dedicated = var.storage_node_config.memory
+  }
+
+  disk {
+    datastore_id = "local-lvm"
+    interface    = "scsi0"
+    size         = var.storage_node_config.disk
+  }
+
+  network_device {
+    bridge = var.network_bridge
+  }
+
+  operating_system {
+    type = "l26"
+  }
+
+  agent {
+    enabled = true
+  }
+
+  initialization {
+    ip_config {
+      ipv4 {
+        address = "${var.storage_node_config.ip}/24"
+        gateway = var.network_gateway
+      }
+    }
+
+    dns {
+      servers = var.dns_servers
+    }
+
+    user_account {
+      username = var.vm_user
+      keys     = [local.ssh_public_key]
+    }
+
+    user_data_file_id = proxmox_virtual_environment_file.storage_node_cloud_init.id
+  }
+
+  lifecycle {
+    ignore_changes = [
+      network_device,
+    ]
+  }
+}
+
 # Cloud-init configuration for control plane
 resource "proxmox_virtual_environment_file" "control_plane_cloud_init" {
   content_type = "snippets"
@@ -338,4 +406,18 @@ resource "proxmox_virtual_environment_file" "inference_cloud_init" {
   }
 
   depends_on = [proxmox_virtual_environment_vm.control_plane]
+}
+
+# Cloud-init configuration for storage node (no k3s — standalone MinIO host)
+resource "proxmox_virtual_environment_file" "storage_node_cloud_init" {
+  content_type = "snippets"
+  datastore_id = "local"
+  node_name    = var.proxmox_node
+
+  source_raw {
+    data = templatefile("${path.module}/cloud-init/storage-node.yaml.tpl", {
+      hostname = var.storage_node_config.name
+    })
+    file_name = "storage-node-cloud-init.yaml"
+  }
 }

@@ -82,6 +82,17 @@ variable "inference_node_config" {
   })
 }
 
+variable "storage_node_config" {
+  description = "Object storage VM configuration (MinIO host, not a k8s node)"
+  type = object({
+    name   = string
+    cores  = number
+    memory = number
+    disk   = number
+    ip     = string
+  })
+}
+
 variable "network_bridge" {
   description = "Proxmox network bridge"
   type        = string
