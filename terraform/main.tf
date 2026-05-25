@@ -416,7 +416,9 @@ resource "proxmox_virtual_environment_file" "storage_node_cloud_init" {
 
   source_raw {
     data = templatefile("${path.module}/cloud-init/storage-node.yaml.tpl", {
-      hostname = var.storage_node_config.name
+      hostname       = var.storage_node_config.name
+      username       = var.vm_user
+      ssh_public_key = local.ssh_public_key
     })
     file_name = "storage-node-cloud-init.yaml"
   }
